@@ -1,0 +1,32 @@
+## Interface: 16001
+## Title: Adventure Chronicler
+## Notes: Records your own adventures when you choose, so you can turn them into a story. Provisional name.
+## Author: Adventure Chronicler contributors
+## Version: 0.1.0
+## SavedVariables: AdventureChroniclerDB
+## SavedVariablesPerCharacter: AdventureChroniclerCharDB
+## IconTexture: Interface\Icons\INV_Misc_Book_09
+## AddonCompartmentFunc: AdventureChronicler_OnCompartmentClick
+
+core\util.lua
+core\limits.lua
+core\session.lua
+core\describe.lua
+export\json.lua
+export\crc32.lua
+export\export.lua
+capture\zones.lua
+capture\quests.lua
+capture\encounters.lua
+capture\pvp.lua
+capture\loot.lua
+capture\screenshot.lua
+core\app.lua
+ui\widgets.lua
+ui\popups.lua
+ui\indicator.lua
+ui\notes.lua
+ui\review.lua
+ui\export.lua
+slash.lua
+init.lua
