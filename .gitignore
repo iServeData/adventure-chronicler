@@ -1,0 +1,14 @@
+dist/
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+*.swp
+.luarocks/
+lua_modules/
+# Never commit real game data or local configuration
+WTF/
+SavedVariables/
+*.bak
+.env
+local/
