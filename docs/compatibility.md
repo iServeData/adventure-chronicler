@@ -6,8 +6,10 @@
   sessions away.
 - **Quest reward hook:** the addon uses `hooksecurefunc("GetQuestReward", ...)`. That's a post-hook, so it
   runs after the game's own code and changes nothing.
-- **Screenshots:** the clean scene preset changes `UIParent` alpha and two nameplate settings
-  (`nameplateShowEnemies`, `nameplateShowFriends`) for a moment, then restores the exact previous values. If
+- **Screenshots:** for a moment, the clean scene preset changes `UIParent` alpha, hides the minimap and
+  turns off the nameplate and floating-name settings (`nameplateShowEnemies`, `nameplateShowFriends` and the
+  `UnitName*` settings listed in `capture/screenshot.lua`). It then restores the exact previous values.
+  Settings the client doesn't have are skipped. If
   combat starts first, the nameplate restore waits until combat ends. Other addons that change these same
   settings at the same moment could conflict. Please report it if you see that.
 - **Addon compartment:** clicking the addon's entry opens the review window.

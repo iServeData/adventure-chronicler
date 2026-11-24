@@ -1,8 +1,9 @@
 -- Adventure Chronicler: user-triggered screenshots with two presets.
 --
 --   as_seen      takes the screenshot exactly as the screen looks.
---   clean_scene  out of combat only: fades the interface out (UIParent alpha) and hides nameplates,
---                takes the screenshot, then puts back the exact previous alpha and nameplate settings.
+--   clean_scene  out of combat only: fades the interface out (UIParent alpha), hides the minimap,
+--                nameplates and the names shown above characters, takes the screenshot, then puts back
+--                the exact previous values. Settings the client doesn't have are left alone.
 --
 -- Settings are never changed permanently. If restoring a setting is blocked (combat began),
 -- it is queued and applied when combat ends. Hidden nameplates do NOT anonymise everything:
@@ -16,7 +17,14 @@ local Sh = { busy = nil, queuedRestore = nil }
 ns.capture.screenshot = Sh
 
 Sh.PRESETS = { as_seen = true, clean_scene = true }
-Sh.NAMEPLATE_CVARS = { "nameplateShowEnemies", "nameplateShowFriends" }
+Sh.NAMEPLATE_CVARS = {
+  "nameplateShowEnemies", "nameplateShowFriends",
+  -- names floating above characters, pets and NPCs (these aren't nameplates)
+  "UnitNameOwn", "UnitNameNPC", "UnitNameFriendlyPlayerName", "UnitNameEnemyPlayerName",
+  "UnitNameFriendlyPetName", "UnitNameEnemyPetName", "UnitNameFriendlyGuardianName",
+  "UnitNameEnemyGuardianName", "UnitNameFriendlyTotemName", "UnitNameEnemyTotemName",
+  "UnitNamePlayerGuild", "UnitNamePlayerPVPTitle",
+}
 Sh.TIMEOUT = 5
 
 function Sh.reset() Sh.busy, Sh.queuedRestore = nil, nil end
@@ -44,6 +52,7 @@ function Sh.restore(ctx)
   b.restored = true
   local api = ctx.api
   if b.prevAlpha and api.UIParent then api.UIParent:SetAlpha(b.prevAlpha) end
+  if b.hidMinimap and api.Minimap then pcall(api.Minimap.Show, api.Minimap) end
   if b.prevCVars then
     if inCombat(api) then
       Sh.queuedRestore = b.prevCVars
@@ -66,6 +75,10 @@ function Sh.take(ctx, preset)
     if api.UIParent then
       b.prevAlpha = api.UIParent:GetAlpha()
       api.UIParent:SetAlpha(0)
+    end
+    -- The minimap draws its ring even at zero alpha, so it is hidden and shown again afterwards.
+    if api.Minimap and api.Minimap:IsShown() then
+      b.hidMinimap = pcall(api.Minimap.Hide, api.Minimap)
     end
     b.prevCVars = {}
     for _, name in ipairs(Sh.NAMEPLATE_CVARS) do
@@ -99,6 +112,16 @@ function Sh.finish(ctx, status)
   Sh.restore(ctx)
   Sh.busy = nil
   local s = status == true and "succeeded" or (status == false and "failed" or "unconfirmed")
+  if ctx.notify then
+    local when = ctx.api.date and ctx.api.date("%H:%M:%S") or ""
+    if s == "succeeded" then
+      ctx.notify("Screenshot saved at about " .. when .. " in the Screenshots folder inside _forever_.")
+    elseif s == "failed" then
+      ctx.notify("The screenshot failed. Nothing was saved.")
+    else
+      ctx.notify("The game didn't confirm the screenshot. Check your Screenshots folder.")
+    end
+  end
   ctx.record({ type = "marker.screenshot", certainty = status == true and "confirmed" or "uncertain",
                data = { preset = b.preset, status = s } }, { allow_paused = true })
 end

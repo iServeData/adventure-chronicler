@@ -43,6 +43,10 @@ function H.api(over)
   api.Screenshot = function() api.shots = api.shots + 1 end
   api.C_Timer = { After = function(d, fn) api.timers[#api.timers + 1] = { d = d, fn = fn } end }
   api.UIParent = { GetAlpha = function() return api.alpha end, SetAlpha = function(_, a) api.alpha = a end }
+  api.minimapShown = true
+  api.Minimap = { IsShown = function() return api.minimapShown end,
+                  Hide = function() api.minimapShown = false end, Show = function() api.minimapShown = true end }
+  api.date = function() return "15:52:16" end
   api.C_Item = { GetItemCount = function(id) return api.bags[id] or 0 end }
   function api.runTimers(maxDelay)
     local pending = api.timers

@@ -7,7 +7,7 @@ local L = ns.limits
 local App = { loaded = false, warnedFull = false }
 ns.App = App
 
-App.VERSION = "0.1.0"
+App.VERSION = "0.1.1"
 App.DEFAULT_SETTINGS = {
   prompt_on_instance = false,   -- ask (never auto-start) when entering a dungeon or raid
   record_pvp = true,            -- battleground entry/exit/result and own deaths
@@ -92,6 +92,7 @@ App.ctx = {
   record = function(obs, opts) return App.record(obs, opts) end,
   settings = setmetatable({}, { __index = function(_, k) return App.settings and App.settings[k] end }),
   onInstanceEnter = function(inst) App.onInstanceEnter(inst) end,
+  notify = function(msg) App.print(msg) end,
 }
 
 function App.onInstanceEnter(inst)

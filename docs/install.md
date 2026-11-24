@@ -12,6 +12,7 @@ The prototype has no download or listing yet. To try it from a copy of this repo
    use that folder instead. The result should be
    `.../_forever_/Interface/AddOns/AdventureChronicler/AdventureChronicler.toc`.
 3. Start the game. At the character screen, open **AddOns** and make sure Adventure Chronicler is enabled.
+   Screenshots go to the `Screenshots` folder in the same `_forever_` folder.
 4. In the game, type `/ac` to open the review window, or `/ac help` for the commands.
 
 To remove it, delete the `AdventureChronicler` folder. Your saved sessions stay in the account's

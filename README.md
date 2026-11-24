@@ -6,7 +6,7 @@ your battleground results, along with notes and bookmarks you write. When you're
 out as a checked text export and turn it into a story. The story can be a private QuestersBoard Chronicle draft
 or a Markdown, text or HTML file.
 
-> Status: prototype, version 0.1.0. It has **not yet been tested in the game client**. The automated tests run
+> Status: prototype, version 0.1.1. It has had **one partial in-game test** (Windows; see [docs/test_results.md](docs/test_results.md)). The automated tests run
 > against a mocked game API (see [docs/testing.md](docs/testing.md)).
 
 ## What it does and doesn't do
@@ -60,7 +60,7 @@ If another addon already uses `/ac`, use `/advchron` instead.
 - [Recording and export](docs/recording_and_export.md)
 - [Export schema and the QuestersBoard mapping](docs/schema.md)
 - [Security and threat model](docs/security.md)
-- [Testing and the in-game checklist](docs/testing.md)
+- [Testing and the in-game checklist](docs/testing.md), [in-game results](docs/test_results.md)
 - [Release checklist](docs/release_checklist.md)
 - [Story editor specification](docs/story_editor_spec.md)
 - [Future desktop companion (design only)](docs/future_companion.md)

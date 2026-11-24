@@ -39,8 +39,9 @@ Before you copy it, the export dialog says whether your name is included.
 ## Screenshots
 
 The addon never reads, stores or uploads screenshot images. It only notes that one was taken. The clean scene
-preset hides the interface and nameplates for a moment. **That doesn't anonymise everything on screen.**
-Character names above heads, chat bubbles, guild names and other text in the world can still appear. Check a
+preset hides the interface, the minimap, nameplates and the names above characters for a moment. **That
+doesn't anonymise everything on screen.** Chat bubbles, guild banners, signs and other text in the world can
+still appear. Check a
 screenshot before you share it.
 
 ## Deleting

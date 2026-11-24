@@ -40,7 +40,7 @@ Setup: install as in [install.md](install.md). Turn on Lua errors with `/console
 | 11 | `/ac note` with no text | Editor opens. Paste over 4,000 characters: the counter turns red, Save is disabled, and the text stays |
 | 12 | `/ac mark Big moment` | Bookmark appears in review |
 | 13 | `/ac shot` | Screenshot saved. Marker shows it succeeded |
-| 14 | Note your nameplate settings, then `/ac shot clean` out of combat | The interface hides for a moment, the screenshot is taken, and the interface and nameplates come back exactly as before |
+| 14 | Note your nameplate, name and minimap settings, then `/ac shot clean` out of combat | The image has no interface, minimap, nameplates or names above characters. Afterwards, everything comes back exactly as before |
 | 15 | `/ac shot clean` in combat | Refused with a message, and nothing changes |
 | 16 | `/reload` while recording | Recording continues, and review shows a reload gap |
 | 17 | Quit the game, wait 20 minutes, log back in | Session is paused and marked interrupted. A message explains |
@@ -52,4 +52,4 @@ Setup: install as in [install.md](install.md). Turn on Lua errors with `/console
 | 23 | With another addon that uses `/ac` (if available) | `/advchron` still works |
 | 24 | Check the saved-data file | No chat, no other player names, no Battle.net identifiers |
 
-Record the results in a copy of this table. Don't commit real exports or saved data.
+Record the results in a copy of this table and add a summary to [test_results.md](test_results.md). Don't commit real exports or saved data.

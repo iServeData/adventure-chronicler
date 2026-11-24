@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.1.1 (prototype, unreleased)
+
+From the first in-game test on Windows (WoW Forever 1.60.1, build 71091):
+
+- Clean scene now also hides the minimap and the names shown above characters, pets and NPCs. It restores
+  the exact previous values afterwards. A minimap you'd already hidden stays hidden.
+- After each screenshot, a chat message says it was saved and roughly when, so the file is easy to find in
+  the Screenshots folder inside `_forever_`.
+- Review no longer shows a bookmark twice.
+
 ## 0.1.0 (prototype, unreleased)
 
 - First prototype for WoW Forever (interface 16001). It hasn't been tested in the game client yet.

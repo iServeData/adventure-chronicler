@@ -33,6 +33,35 @@ describe("screenshots", function()
     assert.same({ nameplateShowEnemies = "1", nameplateShowFriends = "0" }, api.cvars)
   end)
 
+  it("clean scene also hides names and the minimap, and restores only what it changed", function()
+    local ns, _, api, ctx = setup()
+    api.cvars.UnitNameNPC = "1"
+    api.cvars.UnitNameOwn = "0"
+    ns.capture.screenshot.take(ctx, "clean_scene")
+    assert.equal("0", api.cvars.UnitNameNPC); assert.is_false(api.minimapShown)
+    assert.is_nil(api.cvars.UnitNameEnemyTotemName) -- a setting the client lacks is not created
+    api.runTimers(1)
+    ns.capture.screenshot.finish(ctx, true)
+    assert.equal("1", api.cvars.UnitNameNPC); assert.equal("0", api.cvars.UnitNameOwn)
+    assert.is_true(api.minimapShown)
+  end)
+
+  it("leaves a minimap the player had hidden hidden", function()
+    local ns, _, api, ctx = setup()
+    api.minimapShown = false
+    ns.capture.screenshot.take(ctx, "clean_scene")
+    api.runTimers(1); ns.capture.screenshot.finish(ctx, true)
+    assert.is_false(api.minimapShown)
+  end)
+
+  it("tells the player where the screenshot went", function()
+    local ns, _, _, ctx = setup()
+    local said
+    ctx.notify = function(m) said = m end
+    ns.capture.screenshot.take(ctx, "as_seen"); ns.capture.screenshot.finish(ctx, true)
+    assert.truthy(said:find("15:52:16", 1, true)); assert.truthy(said:find("Screenshots", 1, true))
+  end)
+
   it("refuses clean scene in combat", function()
     local ns, _, api, ctx = setup()
     api.combat = true

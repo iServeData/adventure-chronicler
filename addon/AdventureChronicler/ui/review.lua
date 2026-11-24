@@ -77,7 +77,10 @@ local function stamp(t) return date("%Y-%m-%d %H:%M", t) end
 -- Build the visible rows (notes and observations merged by time) for one session.
 function R.entries(s)
   local out = {}
-  for _, o in ipairs(s.observations) do out[#out + 1] = { t = o.t, seq = o.seq, obs = o } end
+  for _, o in ipairs(s.observations) do
+    -- A bookmark is shown once, as its note row; the marker only records when it was added.
+    if o.type ~= "marker.bookmark" then out[#out + 1] = { t = o.t, seq = o.seq, obs = o } end
+  end
   for _, n in ipairs(s.notes) do out[#out + 1] = { t = n.t, seq = 0, note = n } end
   table.sort(out, function(a, b) if a.t ~= b.t then return a.t < b.t end return a.seq < b.seq end)
   return out
