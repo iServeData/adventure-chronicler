@@ -41,3 +41,12 @@ Found and fixed in this run: the flight path start logged "Arrived in Desolace" 
 | 20 | Passed: the export passes the reference validator |
 
 Seen again: taking the zeppelin from Durotar logged a second Durotar arrival when the map changed to the other continent. This build came before the fix; recheck on 0.2.0.
+
+## Run 4: 0.2.0, Windows, WoW Forever 1.60.1, 2026-11-24
+
+| # | Result |
+| --- | --- |
+| 1 | Passed: `/ac version` shows 0.2.0 |
+| 25 | Passed (images): `/ac` opened the recorder, a session started, and it showed "Recording locally" with the time counting and the latest entry |
+
+Found in this run: the recorder used the stock Blizzard frames and looked nothing like the mock. 0.2.1 restyles it. The 0.2.1 look is checked only in a rendered approximation so far, not in game.

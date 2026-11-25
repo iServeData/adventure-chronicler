@@ -53,20 +53,11 @@ function D.observation(o)
   return text
 end
 
--- Icons for the recorder window. Standard game icons only; nothing is downloaded.
-local ICON = {
-  zone = "Interface\\Icons\\INV_Misc_Map_01",
-  instance = "Interface\\Icons\\INV_Misc_Key_03",
-  encounter = "Interface\\Icons\\Ability_DualWield",
-  quest = "Interface\\GossipFrame\\ActiveQuestIcon",
-  item = "Interface\\Icons\\INV_Misc_Bag_08",
-  pvp = "Interface\\Icons\\INV_BannerPVP_02",
-  death = "Interface\\Icons\\Ability_Rogue_FeignDeath",
-  screenshot = "Interface\\Icons\\INV_Misc_Spyglass_03",
-  bookmark = "Interface\\Icons\\INV_Misc_Note_02",
-  note = "Interface\\Icons\\INV_Misc_Note_06",
-  other = "Interface\\Icons\\INV_Misc_QuestionMark",
-}
+-- Icons for the recorder window: the addon's own gold line icons in media/.
+local MEDIA = "Interface\\AddOns\\AdventureChronicler\\media\\icon_"
+local ICON = {}
+for _, k in ipairs({ "zone", "instance", "encounter", "quest", "item", "pvp", "death", "screenshot",
+                     "bookmark", "note", "other" }) do ICON[k] = MEDIA .. k end
 D.ICON = ICON
 
 local FAMILY = {

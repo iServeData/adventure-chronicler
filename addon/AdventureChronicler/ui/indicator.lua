@@ -10,13 +10,23 @@ ns.ui.indicator = I
 local frame, label, elapsed = nil, nil, 0
 
 local function build()
-  frame = CreateFrame("Button", "AdventureChroniclerIndicator", UIParent, "BackdropTemplate")
-  frame:SetSize(150, 24)
+  local W = ns.ui.widgets
+  frame = CreateFrame("Button", "AdventureChroniclerIndicator", UIParent)
+  frame:SetSize(150, 26)
   frame:SetPoint("TOP", 0, -120)
-  frame:SetBackdrop({ bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",
-                      edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border", edgeSize = 12,
-                      insets = { left = 3, right = 3, top = 3, bottom = 3 } })
-  frame:SetBackdropColor(0, 0, 0, 0.75)
+  local bg = frame:CreateTexture(nil, "BACKGROUND")
+  bg:SetAllPoints()
+  bg:SetTexture(W.media("frame_bg"))
+  local G = W.GOLD
+  for _, side in ipairs({ "TOP", "BOTTOM", "LEFT", "RIGHT" }) do
+    local t = frame:CreateTexture(nil, "BORDER")
+    t:SetColorTexture(G[1], G[2], G[3], 0.9)
+    if side == "TOP" or side == "BOTTOM" then
+      t:SetHeight(1); t:SetPoint(side .. "LEFT"); t:SetPoint(side .. "RIGHT")
+    else
+      t:SetWidth(1); t:SetPoint("TOP" .. side); t:SetPoint("BOTTOM" .. side)
+    end
+  end
   frame:SetMovable(true)
   frame:SetClampedToScreen(true)
   frame:RegisterForDrag("LeftButton")
@@ -32,7 +42,7 @@ local function build()
     GameTooltip:Show()
   end)
   frame:SetScript("OnLeave", function() GameTooltip:Hide() end)
-  label = frame:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+  label = W.text(frame, "body", 12, W.CREAM)
   label:SetPoint("CENTER")
   frame:SetScript("OnUpdate", function(_, dt)
     elapsed = elapsed + dt

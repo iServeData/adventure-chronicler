@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.1 (prototype, unreleased)
+
+- The recorder, review, note and export windows now use the add-on's own look from the mock instead of the
+  stock frames: dark panel with a double gold border, compass emblem, serif titles, weathered parchment for
+  the session title, a gold timeline with icons, and tall Add note, Stop (red) and Export buttons.
+- The artwork is drawn by `tools/gen_textures.py` and shipped as TGA files in `media/`. Nothing is copied from
+  the mock or from Blizzard files.
+- Long timeline entries are cut short with "..." inside the window instead of running past the edge.
+
 ## 0.2.0 (prototype, unreleased)
 
 - New recorder window, following panel 1 of the approved mock. `/ac` on its own, the REC indicator and the

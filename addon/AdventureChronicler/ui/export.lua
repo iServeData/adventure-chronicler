@@ -12,23 +12,23 @@ local f, edit, info, text
 
 local function build()
   local W = ns.ui.widgets
-  f = W.window("AdventureChroniclerExport", "Adventure Chronicler: export", 520, 320)
+  f = W.window("AdventureChroniclerExport", "Adventure Chronicler: export", 520, 330, { compass = true })
   -- Sits above the review window so its rows never show through.
   f:SetFrameStrata("FULLSCREEN_DIALOG")
   info = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-  info:SetPoint("TOPLEFT", 16, -32)
+  info:SetPoint("TOPLEFT", 18, -42)
   info:SetPoint("RIGHT", -16, 0)
   info:SetJustifyH("LEFT")
   local scroll
   scroll, edit = W.multiline(f)
-  scroll:SetPoint("TOPLEFT", 14, -76)
-  scroll:SetPoint("BOTTOMRIGHT", -32, 44)
+  scroll:SetPoint("TOPLEFT", 16, -86)
+  scroll:SetPoint("BOTTOMRIGHT", -34, 50)
   -- Read-only: typing restores the original text so the copied export is always intact.
   edit:SetScript("OnTextChanged", function(self, user) if user then self:SetText(text); self:HighlightText() end end)
   edit:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
   local close = W.button(f, "Close", 80, function() f:Hide() end)
-  close:SetPoint("BOTTOMRIGHT", -24, 12)
-  local sel = W.button(f, "Select all", 90, function() edit:SetFocus(); edit:HighlightText() end)
+  close:SetPoint("BOTTOMRIGHT", -18, 16)
+  local sel = W.button(f, "Select all", 90, function() edit:SetFocus(); edit:HighlightText() end, "gold")
   sel:SetPoint("RIGHT", close, "LEFT", -6, 0)
 end
 
