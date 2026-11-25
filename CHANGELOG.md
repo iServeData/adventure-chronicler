@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2.3 (prototype, unreleased)
+
+- A note opened while the export window is showing now comes up on top of it. Of the two, whichever was
+  opened or clicked last is in front.
+- The recorder's short list leaves out the repeat count, which got cut off ("[+1 re..."). The review window
+  still shows it, now as "[+1 repeat]" or "[+2 repeats]".
+
 ## 0.2.2 (prototype, unreleased)
 
 - The session title can be changed while recording: click it in the recorder, type, and press Enter

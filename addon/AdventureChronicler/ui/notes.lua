@@ -24,6 +24,8 @@ end
 local function build()
   local W = ns.ui.widgets
   f = W.window("AdventureChroniclerNotes", "Adventure Chronicler: note", 460, 300, { compass = true })
+  -- Same layer as the export window, so a note opened while an export is showing comes up on top.
+  f:SetFrameStrata("FULLSCREEN_DIALOG")
   f:SetResizable(true)
   if f.SetResizeBounds then f:SetResizeBounds(320, 200, 900, 700) end
   local scroll
@@ -57,6 +59,7 @@ function N.open(sessionId, noteId)
   if not f then build() end
   if f:IsShown() and dirty() then
     ns.App.print("Finish or cancel the note you're writing first.")
+    f:Raise()
     edit:SetFocus()
     return
   end
@@ -70,10 +73,11 @@ function N.open(sessionId, noteId)
   edit:SetText(text)
   N.updateCounter()
   f:Show()
+  f:Raise()
   edit:SetFocus()
 end
 
-function N.reopen() if f then N.closing = true; f:Show(); edit:SetFocus() end end
+function N.reopen() if f then N.closing = true; f:Show(); f:Raise(); edit:SetFocus() end end
 
 function N.close(discard)
   if discard then N.original = edit:GetText() end

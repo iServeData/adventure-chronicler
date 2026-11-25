@@ -28,6 +28,17 @@ describe("recorder window text", function()
     assert.equal(ns.describe.ICON.bookmark, r[3].icon)
   end)
 
+  it("leaves the repeat count to the review window", function()
+    local ns = H.load()
+    local o = { seq = 1, t = 100, type = "zone.enter", certainty = "confirmed", repeats = 1,
+                data = { zone = "Example Vale" } }
+    assert.equal("Arrived in Example Vale [+1 repeat]", ns.describe.observation(o))
+    o.repeats = 2
+    assert.equal("Arrived in Example Vale [+2 repeats]", ns.describe.observation(o))
+    local r = ns.describe.recent({ observations = { o }, notes = {} }, 3)
+    assert.equal("Arrived in Example Vale", r[1].text)
+  end)
+
   it("never says a dungeon was cleared", function()
     local ns = H.load()
     for _, e in ipairs(ns.describe.recent(session(), 10)) do

@@ -13,7 +13,8 @@ local f, edit, info, text
 local function build()
   local W = ns.ui.widgets
   f = W.window("AdventureChroniclerExport", "Adventure Chronicler: export", 520, 330, { compass = true })
-  -- Sits above the review window so its rows never show through.
+  -- Sits above the review window so its rows never show through. The note window shares this layer, and
+  -- whichever of the two was opened or clicked last is on top.
   f:SetFrameStrata("FULLSCREEN_DIALOG")
   info = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   info:SetPoint("TOPLEFT", 18, -42)

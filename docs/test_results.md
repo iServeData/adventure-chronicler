@@ -67,3 +67,20 @@ Found in this run, all fixed in 0.2.2:
 - The session title couldn't be changed once recording had started.
 - Right after a `/reload` the map was briefly the whole continent, which logged "Arrived in Eastern Kingdoms" between two Stranglethorn Vale arrivals.
 - One death was logged twice, a second apart.
+
+## Run 6: 0.2.2, Windows, WoW Forever 1.60.1, 2026-11-24
+
+| # | Result |
+| --- | --- |
+| 1 | Passed: `/ac version` shows 0.2.2 |
+| 28 | Passed (images): a session was renamed to "Test" while recording, and a later one to "Sstuf". Chat said "Session renamed", and the new names show in the recorder, the review list and the export |
+| 29 | Partial: after a `/reload` the export has a reload gap and no continent line (the Orgrimmar arrival is merged as a repeat). Not yet checked on a boat or zeppelin |
+| 26 | Passed: Pause and Resume show as a 3-second paused segment in the export. Bookmark and Add note also worked |
+| 27 | Passed: after Stop, a new session started from the recorder. The stopped session stays in the review list |
+| 20 | Passed: all three exports pass the reference validator |
+
+Found in this run, fixed in 0.2.3:
+
+- A note opened while the export window was showing appeared underneath it.
+- In the recorder, "Arrived in Orgrimmar [+1 repeats]" was cut off. The recorder now leaves the count out, and the review window says "[+1 repeat]".
+

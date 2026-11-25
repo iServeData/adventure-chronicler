@@ -45,11 +45,15 @@ local WORDS = {
   end,
 }
 
-function D.observation(o)
+-- compact leaves out the repeat count; the recorder window is narrow, and the review window shows it.
+function D.observation(o, compact)
   local f = WORDS[o.type]
   local text = f and f(o.data or {}) or o.type
   text = text .. (CERTAINTY_LABEL[o.certainty] or "")
-  if (o.repeats or 0) > 0 then text = text .. string.format(" [+%d repeats]", o.repeats) end
+  local n = o.repeats or 0
+  if n > 0 and not compact then
+    text = text .. string.format(" [+%d %s]", n, n == 1 and "repeat" or "repeats")
+  end
   return text
 end
 
@@ -77,7 +81,7 @@ function D.recent(s, n)
   local all = {}
   for _, o in ipairs(s.observations or {}) do
     if o.type ~= "marker.bookmark" then
-      all[#all + 1] = { t = o.t, seq = o.seq or 0, icon = D.iconFor(o.type), text = D.observation(o) }
+      all[#all + 1] = { t = o.t, seq = o.seq or 0, icon = D.iconFor(o.type), text = D.observation(o, true) }
     end
   end
   for _, note in ipairs(s.notes or {}) do
