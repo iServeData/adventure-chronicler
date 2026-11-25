@@ -25,3 +25,4 @@ Not yet run: 4 to 9, 15 to 19 and 21 to 24, and every item on Mac.
 | 14 | Passed (image): the clean scene screenshot has no interface, minimap, nameplates or names above characters. The interface and chat came back afterwards |
 | 1 | Passed: `/ac version` shows 0.1.1 |
 | 13 | Passed: the chat message appeared. It said 17:06:15 for a file named `..._170614`, so the time now comes from the request instead of the confirmation |
+| 14 | Passed again (image, 17:18:22): clean scene while riding a flight path shows only the scenery and the character on the mount |
