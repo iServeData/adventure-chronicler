@@ -2,6 +2,8 @@
 
 ## 0.1.1 (prototype, unreleased)
 
+- The screenshot message uses the time the screenshot was requested, so it matches the file name more closely.
+
 From the first in-game test on Windows (WoW Forever 1.60.1, build 71091):
 
 - Clean scene now also hides the minimap and the names shown above characters, pets and NPCs. It restores

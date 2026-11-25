@@ -113,7 +113,8 @@ function Sh.finish(ctx, status)
   Sh.busy = nil
   local s = status == true and "succeeded" or (status == false and "failed" or "unconfirmed")
   if ctx.notify then
-    local when = ctx.api.date and ctx.api.date("%H:%M:%S") or ""
+    -- Time of the request, which matches the file name more closely than the confirmation does.
+    local when = ctx.api.date and ctx.api.date("%H:%M:%S", b.at) or ""
     if s == "succeeded" then
       ctx.notify("Screenshot saved at about " .. when .. " in the Screenshots folder inside _forever_.")
     elseif s == "failed" then
