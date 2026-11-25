@@ -7,7 +7,7 @@ local L = ns.limits
 local App = { loaded = false, warnedFull = false }
 ns.App = App
 
-App.VERSION = "0.1.1"
+App.VERSION = "0.2.0"
 App.DEFAULT_SETTINGS = {
   prompt_on_instance = false,   -- ask (never auto-start) when entering a dungeon or raid
   record_pvp = true,            -- battleground entry/exit/result and own deaths
@@ -72,6 +72,7 @@ end
 function App.refresh()
   if ns.ui and ns.ui.indicator then ns.ui.indicator.update() end
   if ns.ui and ns.ui.review and ns.ui.review.refresh then ns.ui.review.refresh() end
+  if ns.ui and ns.ui.recorder and ns.ui.recorder.refresh then ns.ui.recorder.refresh() end
 end
 
 -- Capture modules call this. Records only while a session is recording (markers also while paused).
@@ -227,6 +228,10 @@ function App.review()
   if ns.ui and ns.ui.review then ns.ui.review.open() end
 end
 
-_G.AdventureChronicler_OnCompartmentClick = function() App.review() end -- luacheck: ignore
+function App.recorder()
+  if ns.ui and ns.ui.recorder then ns.ui.recorder.toggle() end
+end
+
+_G.AdventureChronicler_OnCompartmentClick = function() App.recorder() end -- luacheck: ignore
 
 return App

@@ -51,5 +51,8 @@ Setup: install as in [install.md](install.md). Turn on Lua errors with `/console
 | 22 | Review: delete one event, then delete the session | Each one asks or acts as expected. A session with notes that were never exported gives a warning |
 | 23 | With another addon that uses `/ac` (if available) | `/advchron` still works |
 | 24 | Check the saved-data file | No chat, no other player names, no Battle.net identifiers |
+| 25 | `/ac` with no session, name it and press Start | Recorder window shows "Recording locally", the title and the time counting up |
+| 26 | In the recorder: Add note, Bookmark, Pause and Resume | Each one works, and the latest three entries update |
+| 27 | Press Stop in the recorder | It asks first. After Stop, the window offers Start again |
 
 Record the results in a copy of this table and add a summary to [test_results.md](test_results.md). Don't commit real exports or saved data.

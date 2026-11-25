@@ -12,6 +12,6 @@
   Settings the client doesn't have are skipped. If
   combat starts first, the nameplate restore waits until combat ends. Other addons that change these same
   settings at the same moment could conflict. Please report it if you see that.
-- **Addon compartment:** clicking the addon's entry opens the review window.
+- **Addon compartment:** clicking the addon's entry opens the recorder window.
 - **Errors:** each capture module runs inside `pcall`, so one failing module doesn't break the others or
   your interface.

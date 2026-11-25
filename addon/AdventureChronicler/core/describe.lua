@@ -53,4 +53,60 @@ function D.observation(o)
   return text
 end
 
+-- Icons for the recorder window. Standard game icons only; nothing is downloaded.
+local ICON = {
+  zone = "Interface\\Icons\\INV_Misc_Map_01",
+  instance = "Interface\\Icons\\INV_Misc_Key_03",
+  encounter = "Interface\\Icons\\Ability_DualWield",
+  quest = "Interface\\GossipFrame\\ActiveQuestIcon",
+  item = "Interface\\Icons\\INV_Misc_Bag_08",
+  pvp = "Interface\\Icons\\INV_BannerPVP_02",
+  death = "Interface\\Icons\\Ability_Rogue_FeignDeath",
+  screenshot = "Interface\\Icons\\INV_Misc_Spyglass_03",
+  bookmark = "Interface\\Icons\\INV_Misc_Note_02",
+  note = "Interface\\Icons\\INV_Misc_Note_06",
+  other = "Interface\\Icons\\INV_Misc_QuestionMark",
+}
+D.ICON = ICON
+
+local FAMILY = {
+  ["zone.enter"] = "zone", ["instance.enter"] = "instance", ["instance.leave"] = "instance",
+  ["encounter.start"] = "encounter", ["encounter.end"] = "encounter",
+  ["quest.rewards_offered"] = "quest", ["quest.reward_selected"] = "quest", ["quest.turned_in"] = "quest",
+  ["item.received"] = "item", ["loot.seen"] = "item",
+  ["pvp.battleground_enter"] = "pvp", ["pvp.battleground_leave"] = "pvp", ["pvp.battleground_result"] = "pvp",
+  ["player.death"] = "death", ["marker.screenshot"] = "screenshot",
+}
+
+function D.iconFor(obsType) return ICON[FAMILY[obsType] or "other"] end
+
+-- The newest entries of a session, oldest first, for the recorder window. Notes and bookmarks are
+-- included; the bookmark marker is skipped because its note row already shows it.
+function D.recent(s, n)
+  local all = {}
+  for _, o in ipairs(s.observations or {}) do
+    if o.type ~= "marker.bookmark" then
+      all[#all + 1] = { t = o.t, seq = o.seq or 0, icon = D.iconFor(o.type), text = D.observation(o) }
+    end
+  end
+  for _, note in ipairs(s.notes or {}) do
+    local bookmark = note.kind == "bookmark"
+    local preview = (note.text or ""):gsub("\n", " ")
+    all[#all + 1] = { t = note.t, seq = 0, icon = bookmark and ICON.bookmark or ICON.note,
+                      text = (bookmark and "Bookmark" or "Note") .. (preview ~= "" and (": " .. preview) or "") }
+  end
+  table.sort(all, function(a, b) if a.t ~= b.t then return a.t < b.t end return a.seq < b.seq end)
+  local out = {}
+  for i = math.max(1, #all - n + 1), #all do out[#out + 1] = all[i] end
+  return out
+end
+
+-- What the status line says. Recording is always shown plainly so the player knows it is on.
+function D.status(s)
+  if not s then return "gray", "Not recording" end
+  if s.state == "recording" then return "green", "Recording locally" end
+  if s.state == "paused" then return "yellow", "Paused" .. (s.interrupted and " (interrupted)" or "") end
+  return "gray", "Stopped"
+end
+
 return D

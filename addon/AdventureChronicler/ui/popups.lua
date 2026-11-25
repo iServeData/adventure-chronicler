@@ -16,6 +16,13 @@ StaticPopupDialogs["ADVENTURECHRONICLER_REMOVE_OLDEST"] = {
   timeout = 0, whileDead = true, hideOnEscape = true, showAlert = true, preferredIndex = 3,
 }
 
+StaticPopupDialogs["ADVENTURECHRONICLER_STOP"] = {
+  text = "Stop recording %s? You can still review and export it, but it can't be resumed.",
+  button1 = "Stop", button2 = "Keep recording",
+  OnAccept = function() ns.App.stop() end,
+  timeout = 0, whileDead = true, hideOnEscape = true, preferredIndex = 3,
+}
+
 StaticPopupDialogs["ADVENTURECHRONICLER_DELETE_SESSION"] = {
   text = "Delete this session and everything in it? This can't be undone.%s",
   button1 = "Delete", button2 = "Cancel",

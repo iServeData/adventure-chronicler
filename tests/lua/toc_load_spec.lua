@@ -63,7 +63,11 @@ describe("addon load (stubbed)", function()
       onEvent(frames[1], "ADDON_LOADED", "AdventureChronicler")
       onEvent(frames[1], "PLAYER_LOGIN")
       local slash = _G.SlashCmdList.ADVENTURECHRONICLER
+      slash("")  -- opens the recorder window with no session
       slash("start Synthetic test")
+      slash("")  -- closes it
+      slash("")  -- and opens it again while recording
+      slash("help")
       slash("note A short synthetic note")
       slash("mark")
       slash("pause"); slash("resume"); slash("stop")

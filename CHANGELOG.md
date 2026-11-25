@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0 (prototype, unreleased)
+
+- New recorder window, following panel 1 of the approved mock. `/ac` on its own, the REC indicator and the
+  add-on menu open it. It shows whether recording is on, the session title, recorded time and the latest
+  three entries, with Add note, Stop and Export, plus Pause, Bookmark and Review all. With no session open
+  you can name one and press Start.
+- Stop now asks first, because a stopped session can't be resumed.
+- `/ac help` lists the commands. `/ac review` still opens the full review window.
+
 ## 0.1.1 (prototype, unreleased)
 
 - Taking a flight path no longer logs the same zone arrival twice.

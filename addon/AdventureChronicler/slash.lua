@@ -4,6 +4,7 @@ local _, ns = ...
 ns = ns or {}
 
 local HELP = {
+  "/ac  open or close the recorder window",
   "/ac start [name]  start recording a session",
   "/ac pause | resume  pause or continue recording",
   "/ac note [text]  add a note (no text opens the editor)",
@@ -40,7 +41,8 @@ function ns.handleSlash(msg)
   elseif cmd == "mark" then App.mark(rest)
   elseif cmd == "shot" then App.shot((rest == "clean" or rest == "clean_scene") and "clean_scene" or "as_seen")
   elseif cmd == "stop" then App.stop()
-  elseif cmd == "review" or cmd == "" then App.review()
+  elseif cmd == "" then App.recorder()
+  elseif cmd == "review" then App.review()
   elseif cmd == "export" then App.export()
   elseif cmd == "options" then options(App)
   elseif cmd == "set" then
@@ -51,6 +53,7 @@ function ns.handleSlash(msg)
     App.settings[key] = (val == "on")
     App.print(name .. " is now " .. val .. ".")
   elseif cmd == "version" then App.print("version " .. App.VERSION)
+  elseif cmd == "help" then for _, line in ipairs(HELP) do App.print(line) end
   else for _, line in ipairs(HELP) do App.print(line) end end
 end
 
