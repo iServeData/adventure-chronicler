@@ -37,36 +37,48 @@ end
 
 local encode
 
-local function encodeTable(t, depth)
+-- pretty: indent nested values by two spaces per level (for the readable JSON export).
+local function encodeTable(t, depth, pretty)
   if depth > 16 then error("json: nesting too deep") end
   local out = {}
+  local open, sep, close, colon = "", ",", "", ":"
+  if pretty then
+    local pad = string.rep("  ", depth + 1)
+    open, sep, close, colon = "\n" .. pad, ",\n" .. pad, "\n" .. string.rep("  ", depth), ": "
+  end
   if getmetatable(t) == ARRAY then
-    for i = 1, #t do out[i] = encode(t[i], depth + 1) end
-    return "[" .. table.concat(out, ",") .. "]"
+    if #t == 0 then return "[]" end
+    for i = 1, #t do out[i] = encode(t[i], depth + 1, pretty) end
+    return "[" .. open .. table.concat(out, sep) .. close .. "]"
   end
   local keys = {}
   for k in pairs(t) do
     if type(k) ~= "string" then error("json: object keys must be strings") end
     keys[#keys + 1] = k
   end
+  if #keys == 0 then return "{}" end
   table.sort(keys)
-  for i, k in ipairs(keys) do out[i] = encodeString(k) .. ":" .. encode(t[k], depth + 1) end
-  return "{" .. table.concat(out, ",") .. "}"
+  for i, k in ipairs(keys) do out[i] = encodeString(k) .. colon .. encode(t[k], depth + 1, pretty) end
+  return "{" .. open .. table.concat(out, sep) .. close .. "}"
 end
 
-encode = function(v, depth)
+encode = function(v, depth, pretty)
   local tv = type(v)
   if v == json.null then return "null"
   elseif tv == "string" then return encodeString(v)
   elseif tv == "number" then return encodeNumber(v)
   elseif tv == "boolean" then return v and "true" or "false"
-  elseif tv == "table" then return encodeTable(v, depth)
+  elseif tv == "table" then return encodeTable(v, depth, pretty)
   end
   error("json: cannot encode " .. tv)
 end
 
 function json.encode(v)
-  return encode(v, 0)
+  return encode(v, 0, false)
+end
+
+function json.encodePretty(v)
+  return encode(v, 0, true)
 end
 
 return json

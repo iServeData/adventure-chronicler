@@ -4,7 +4,7 @@
 package.path = "./?.lua;" .. package.path
 _G.describe = function() end
 local H = require("tests.lua.helper")
-local sample = dofile("tests/lua/export_spec.lua").sample
+local sample = dofile("tests/lua/export_spec_sample.lua")
 local ns = H.load()
 local text = assert(ns.Export.toText(sample(ns), {}, "0.1.0"))
 local f = assert(io.open("tests/fixtures/valid_session.acx.txt", "wb"))

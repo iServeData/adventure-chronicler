@@ -7,7 +7,7 @@ local L = ns.limits
 local App = { loaded = false, warnedFull = false }
 ns.App = App
 
-App.VERSION = "0.2.3"
+App.VERSION = "0.2.4"
 App.DEFAULT_SETTINGS = {
   prompt_on_instance = false,   -- ask (never auto-start) when entering a dungeon or raid
   record_pvp = true,            -- battleground entry/exit/result and own deaths
@@ -15,7 +15,39 @@ App.DEFAULT_SETTINGS = {
   include_identity = false,     -- opt-in: character name and realm in exports
   include_class_level = true,   -- class and level in exports (not identifying on their own)
   show_indicator = true,        -- the recording indicator is always shown while recording or paused
+  questersboard_url = "",       -- your community's QuestersBoard address, set with /ac link (https only)
 }
+
+-- Accepts only a plain https:// address (no spaces, quotes or WoW escape codes), up to 200 characters.
+function App.validLink(url)
+  if type(url) ~= "string" then return nil end
+  url = url:match("^%s*(.-)%s*$")
+  if #url > 200 or #url < 12 then return nil end
+  if not url:lower():match("^https://[%w%-%.]+%.[%a][%w%-]*") then return nil end
+  if url:find("[%s%c\"'<>|\\`]") then return nil end
+  return url
+end
+
+function App.setLink(url)
+  if url == nil or url == "" then
+    local cur = App.settings.questersboard_url
+    App.print(cur ~= "" and ("QuestersBoard address: " .. cur) or
+      "No QuestersBoard address set. Use /ac link https://your-questersboard-address")
+    return
+  end
+  if url == "clear" or url == "off" then
+    App.settings.questersboard_url = ""
+    App.print("QuestersBoard address cleared.")
+    return
+  end
+  local ok = App.validLink(url)
+  if not ok then
+    App.print("That doesn't look like an https:// address. Example: /ac link https://example.com/import")
+    return
+  end
+  App.settings.questersboard_url = ok
+  App.print("QuestersBoard address set to " .. ok)
+end
 
 local api = _G
 App.api = api

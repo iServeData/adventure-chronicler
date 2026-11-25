@@ -13,7 +13,8 @@ local HELP = {
   "/ac shot [clean]  take a screenshot (as seen, or clean scene out of combat)",
   "/ac stop  end the session",
   "/ac review  open the review window",
-  "/ac export  copy the latest session",
+  "/ac export  copy the latest session (import code, Markdown, text or JSON)",
+  "/ac link <https://...>  set your QuestersBoard address (/ac link clear removes it)",
   "/ac options  show settings;  /ac set <setting> on|off",
   "/ac version",
 }
@@ -46,6 +47,7 @@ function ns.handleSlash(msg)
   elseif cmd == "" then App.recorder()
   elseif cmd == "review" then App.review()
   elseif cmd == "export" then App.export()
+  elseif cmd == "link" then App.setLink(rest)
   elseif cmd == "options" then options(App)
   elseif cmd == "set" then
     local name, val = rest:match("^(%S+)%s+(%S+)$")

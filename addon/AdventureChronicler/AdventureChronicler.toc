@@ -2,7 +2,7 @@
 ## Title: Adventure Chronicler
 ## Notes: Records your own adventures when you choose, so you can turn them into a story. Provisional name.
 ## Author: Adventure Chronicler contributors
-## Version: 0.2.3
+## Version: 0.2.4
 ## SavedVariables: AdventureChroniclerDB
 ## SavedVariablesPerCharacter: AdventureChroniclerCharDB
 ## IconTexture: Interface\Icons\INV_Misc_Book_09
@@ -15,6 +15,7 @@ core\describe.lua
 export\json.lua
 export\crc32.lua
 export\export.lua
+export\formats.lua
 capture\zones.lua
 capture\quests.lua
 capture\encounters.lua

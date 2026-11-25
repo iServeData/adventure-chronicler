@@ -6,7 +6,7 @@ your battleground results, along with notes and bookmarks you write. When you're
 out as a checked text export and turn it into a story. The story can be a private QuestersBoard Chronicle draft
 or a Markdown, text or HTML file.
 
-> Status: prototype, version 0.2.3. It has had **six partial in-game test runs** (Windows; see [docs/test_results.md](docs/test_results.md)). The automated tests run
+> Status: prototype, version 0.2.4. It has had **six partial in-game test runs** (Windows; see [docs/test_results.md](docs/test_results.md)). The automated tests run
 > against a mocked game API (see [docs/testing.md](docs/testing.md)).
 
 ## What it does and doesn't do
@@ -37,7 +37,8 @@ or a Markdown, text or HTML file.
 | `/ac shot` / `/ac shot clean` | Take a screenshot as seen, or a clean scene (outside combat) |
 | `/ac stop` | End the session |
 | `/ac review` | Review, edit or delete sessions, notes and events |
-| `/ac export` | Show the latest session's export text to copy |
+| `/ac export` | Show the latest session to copy: the import code for QuestersBoard, or Markdown, Text or JSON to keep as a file |
+| `/ac link <https://...>` | Save your community's QuestersBoard address for the export window's Open QuestersBoard button (`/ac link clear` removes it) |
 | `/ac options`, `/ac set <setting> on\|off` | Show or change settings |
 
 If another addon already uses `/ac`, use `/advchron` instead.

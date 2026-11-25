@@ -57,5 +57,9 @@ Setup: install as in [install.md](install.md). Turn on Lua errors with `/console
 | 28 | While recording, click the session title, type a new name and press Enter; then try Escape | The new name shows in the recorder and in review. Escape keeps the old name |
 | 29 | Take a boat or zeppelin to another continent | No "Arrived in" line for the continent itself, only the zones |
 | 30 | With an export window open, press Add note | The note window opens on top of the export window |
+| 31 | In the export window, click Markdown, Text, JSON, then Import code | Each shows its copy and a suggested file name; the chosen format is highlighted. Import code still validates |
+| 32 | Copy the Markdown into a new `.md` file and open it | Title, details, timeline and your notes in full. No character name unless turned on |
+| 33 | Press Open QuestersBoard before setting an address | It explains `/ac link https://...` |
+| 34 | `/ac link http://example.com`, then `/ac link https://example.com`, then press the button | The http address is refused. The https one shows selected; Ctrl+C copies it |
 
 Record the results in a copy of this table and add a summary to [test_results.md](test_results.md). Don't commit real exports or saved data.

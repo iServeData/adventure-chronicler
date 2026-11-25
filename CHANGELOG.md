@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.2.4 (prototype, unreleased)
+
+- The export window has a Format row: Import code (the checked code QuestersBoard reads, as before),
+  Markdown, Text and JSON. The last three are readable copies to keep as a file. WoW doesn't let add-ons
+  save files, so the window suggests a file name (for example `adventure_2026-11-24_evening_run.md`) for you
+  to paste into. Only the import code can be imported.
+- The readable copies follow the same privacy settings as the import code: no chat, no other players, and no
+  character name unless you turned it on. Notes are written out in full, and paused or missing time is shown.
+- An Open QuestersBoard button. WoW doesn't let add-ons open a browser, so it shows your community's
+  QuestersBoard address ready to copy. Set the address once with `/ac link https://...` (https only). It's
+  saved with your settings on your computer; the add-on ships with no address.
+
 ## 0.2.3 (prototype, unreleased)
 
 - A note opened while the export window is showing now comes up on top of it. Of the two, whichever was

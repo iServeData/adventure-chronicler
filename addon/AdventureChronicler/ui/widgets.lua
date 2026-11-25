@@ -158,6 +158,14 @@ local function styleButton(b, style)
   if dis then dis:SetDesaturated(true); dis:SetVertexColor(0.6, 0.6, 0.6) end
 end
 
+-- Switch a W.button between styles (used for the selected export format).
+function W.restyle(b, style)
+  styleButton(b, style)
+  local ink = style == "gold" and W.INK or W.CREAM
+  b.label:SetTextColor(ink[1], ink[2], ink[3])
+  b:SetScript("OnEnable", function(self) self.label:SetTextColor(ink[1], ink[2], ink[3]) end)
+end
+
 -- A text button in the gold-trimmed style. style is "dark" (default), "red" or "gold".
 function W.button(parent, text, width, onClick, style, height)
   local b = CreateFrame("Button", nil, parent)
