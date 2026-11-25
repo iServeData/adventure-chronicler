@@ -54,8 +54,44 @@ local function build()
   if ok == false then titleInput:SetFontObject("GameFontHighlightLarge") end
   titleInput:SetTextColor(W.INK[1], W.INK[2], W.INK[3])
   titleInput:SetMaxLetters(ns.limits.max_title_chars)
-  titleInput:SetScript("OnEnterPressed", function(self) self:ClearFocus(); ns.App.start(self:GetText()) end)
-  titleInput:SetScript("OnEscapePressed", titleInput.ClearFocus)
+  -- With no session open, Enter starts one. During a session, Enter renames it and Escape keeps the old name.
+  titleInput:SetScript("OnEnterPressed", function(self)
+    local text = self:GetText()
+    local renaming = self.renaming
+    self.renaming = false
+    self:ClearFocus()
+    if renaming then ns.App.rename(text) else ns.App.start(text) end
+  end)
+  titleInput:SetScript("OnEscapePressed", function(self) self.renaming = false; self:ClearFocus(); R.refresh() end)
+  titleInput:SetScript("OnEditFocusLost", function(self)
+    if self.renaming then self.renaming = false; R.refresh() end
+  end)
+  -- Click the title during a session to rename it.
+  local rename = CreateFrame("Button", nil, titleBox)
+  rename:SetAllPoints()
+  rename:SetScript("OnClick", function()
+    local s = ns.Session.active(ns.App.db)
+    if not s then titleInput:SetFocus() return end
+    titleText:Hide()
+    titleInput:SetText(s.title or "")
+    titleInput:Show(); inputRule:Show()
+    titleInput.renaming = true
+    titleInput:SetFocus()
+    titleInput:HighlightText()
+  end)
+  rename:SetScript("OnEnter", function(self)
+    if not ns.Session.active(ns.App.db) then return end
+    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:SetText("Click to rename this session")
+    GameTooltip:Show()
+  end)
+  rename:SetScript("OnLeave", function() GameTooltip:Hide() end)
+  titleInput:SetFrameLevel((tonumber(rename:GetFrameLevel()) or 1) + 1)
+  local pencil = titleBox:CreateTexture(nil, "OVERLAY")
+  pencil:SetTexture(W.media("icon_note"))
+  pencil:SetSize(16, 16)
+  pencil:SetPoint("TOPRIGHT", -10, -8)
+  pencil:SetVertexColor(W.INK[1], W.INK[2], W.INK[3], 0.7)
   inputRule = titleBox:CreateTexture(nil, "ARTWORK")
   inputRule:SetColorTexture(W.INK[1], W.INK[2], W.INK[3], 0.45)
   inputRule:SetHeight(1)
@@ -158,10 +194,11 @@ function R.refresh()
   status:SetText(words)
 
   local open = s ~= nil
-  titleText:SetShown(open)
-  titleInput:SetShown(not open)
-  inputRule:SetShown(not open)
-  if open then titleText:SetText(s.title ~= "" and s.title or "Untitled") end
+  local editing = titleInput.renaming
+  titleText:SetShown(open and not editing)
+  titleInput:SetShown(not open or editing)
+  inputRule:SetShown(not open or editing)
+  if open and not editing then titleText:SetText(s.title ~= "" and s.title or "Untitled") end
   elapsed:SetText(ns.util.formatDuration(open and ns.Session.recordedSeconds(s, App.now()) or 0))
 
   local recent = open and ns.describe.recent(s, RECENT) or {}

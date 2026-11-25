@@ -132,7 +132,8 @@ function R.refresh()
     else
       local kind = e.note.kind == "bookmark" and "Bookmark" or "Note"
       local preview = e.note.text:gsub("\n", " ")
-      r.text:SetText("|cff999999" .. when .. "|r  |cffd9a441" .. kind .. ":|r " .. preview)
+      local sep = preview ~= "" and ":|r " or "|r"
+      r.text:SetText("|cff999999" .. when .. "|r  |cffd9a441" .. kind .. sep .. preview)
       r:SetScript("OnClick", function() if e.note.kind == "note" then ns.ui.notes.open(s.id, e.note.id) end end)
       r.del:SetScript("OnClick", function() ns.Session.deleteNote(s, App.now(), e.note.id); R.refresh() end)
     end

@@ -22,13 +22,23 @@ end
 function Z.snapshot(api)
   local mapID = api.C_Map and api.C_Map.GetBestMapForUnit and api.C_Map.GetBestMapForUnit("player")
   mapID = util.safe(mapID, api)
-  local mapName
+  local mapName, mapType
   if mapID and api.C_Map.GetMapInfo then
     local info = api.C_Map.GetMapInfo(mapID)
     mapName = info and info.name
+    mapType = info and info.mapType
   end
   local zone = api.GetRealZoneText and api.GetRealZoneText() or nil
-  return { map_id = mapID, map = mapName, zone = zone ~= "" and zone or nil, instance = instanceInfo(api) }
+  return { map_id = mapID, map = mapName, map_type = mapType, zone = zone ~= "" and zone or nil,
+           instance = instanceInfo(api) }
+end
+
+-- Continent, world and cosmic maps (map types 0 to 2), plus the Kalimdor and Eastern Kingdoms map IDs in
+-- case the type is missing. Seen on boats and zeppelins between zones.
+local CONTINENT_IDS = { [1414] = true, [1415] = true }
+local function continentOnly(snap)
+  local wide = (type(snap.map_type) == "number" and snap.map_type <= 2) or CONTINENT_IDS[snap.map_id]
+  return wide and (snap.zone == nil or snap.zone == snap.map)
 end
 
 function Z.check(ctx)
@@ -45,6 +55,9 @@ function Z.check(ctx)
   Z.lastInstance, Z.lastInstanceData = instKey, inst
   -- Keyed on the zone name: on a flight path the map can switch to the continent while the zone
   -- stays the same, which would otherwise log the same arrival twice.
+  -- In transit the map can be a whole continent with no zone; that isn't an arrival, so wait for the
+  -- next real zone instead of logging one.
+  if continentOnly(snap) then return end
   local key = snap.zone or tostring(snap.map_id or "?")
   if key ~= Z.last then
     Z.last = key

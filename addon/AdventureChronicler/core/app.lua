@@ -7,7 +7,7 @@ local L = ns.limits
 local App = { loaded = false, warnedFull = false }
 ns.App = App
 
-App.VERSION = "0.2.1"
+App.VERSION = "0.2.2"
 App.DEFAULT_SETTINGS = {
   prompt_on_instance = false,   -- ask (never auto-start) when entering a dungeon or raid
   record_pvp = true,            -- battleground entry/exit/result and own deaths
@@ -157,6 +157,15 @@ function App.stop()
   else
     App.print(messages[why])
   end
+  App.refresh()
+end
+
+function App.rename(title, id)
+  local s = id and App.db.sessions[id] or S.active(App.db)
+  if not s then App.print(messages.no_session) return end
+  local ok, why = S.rename(s, App.now(), title)
+  if not ok then App.print(messages[why] or why) return end
+  App.print(s.title ~= "" and ("Session renamed: " .. s.title) or "Session name cleared.")
   App.refresh()
 end
 

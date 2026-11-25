@@ -50,3 +50,20 @@ Seen again: taking the zeppelin from Durotar logged a second Durotar arrival whe
 | 25 | Passed (images): `/ac` opened the recorder, a session started, and it showed "Recording locally" with the time counting and the latest entry |
 
 Found in this run: the recorder used the stock Blizzard frames and looked nothing like the mock. 0.2.1 restyles it. The 0.2.1 look is checked only in a rendered approximation so far, not in game.
+
+## Run 5: 0.2.1, Windows, WoW Forever 1.60.1, 2026-11-24
+
+| # | Result |
+| --- | --- |
+| 1 | Passed: `/ac version` shows 0.2.1 |
+| 25 | Passed (images): the restyled recorder loaded with all its artwork (no missing textures) and shows the latest three entries |
+| 26 | Partial: Add note and the Bookmark link worked, and the latest three entries updated. Long notes are cut short with "..." in both windows. Pause and Resume weren't shown |
+| 20 | Passed: the export from the restyled export window passes the reference validator (6 observations, 2 notes) |
+| 16 | Passed again: a `/reload` while recording shows as a reload gap in the export |
+| 27 | Partial: Stop asks first ("Stop" or "Keep recording"). What happens after Stop wasn't shown |
+
+Found in this run, all fixed in 0.2.2:
+
+- The session title couldn't be changed once recording had started.
+- Right after a `/reload` the map was briefly the whole continent, which logged "Arrived in Eastern Kingdoms" between two Stranglethorn Vale arrivals.
+- One death was logged twice, a second apart.

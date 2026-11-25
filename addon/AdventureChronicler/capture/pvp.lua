@@ -5,7 +5,7 @@ ns = ns or {}
 ns.capture = ns.capture or {}
 local util = ns.util
 
-local P = { active = nil, resultRecorded = false }
+local P = { active = nil, resultRecorded = false, dead = false }
 ns.capture.pvp = P
 
 function P.reset() P.active, P.resultRecorded = nil, false end
@@ -52,8 +52,12 @@ function P.result(ctx, winner)
                         player_faction = mine, outcome = outcome } })
 end
 
+-- The client can report the same death more than once (seen in game: two reports a second apart). A death
+-- is only logged again after the player has been alive in between.
 function P.onDeath(ctx)
   if ctx.settings.record_pvp == false then return end
+  if P.dead then return end
+  P.dead = true
   local api = ctx.api
   local context = "world"
   if P.active then context = "battleground"
@@ -72,6 +76,12 @@ P.events = {
   PVP_MATCH_COMPLETE = function(ctx, winner) P.result(ctx, winner) end,
   UPDATE_BATTLEFIELD_SCORE = function(ctx) P.result(ctx, nil) end,
   PLAYER_DEAD = function(ctx) P.onDeath(ctx) end,
+  -- PLAYER_ALIVE also fires on release to a ghost, so only count it when the player isn't a ghost.
+  PLAYER_ALIVE = function(ctx)
+    local api = ctx.api
+    if not (api.UnitIsGhost and api.UnitIsGhost("player")) then P.dead = false end
+  end,
+  PLAYER_UNGHOST = function() P.dead = false end,
 }
 
 return P

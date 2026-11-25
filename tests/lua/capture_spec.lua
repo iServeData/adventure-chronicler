@@ -128,6 +128,29 @@ describe("zones, instances and encounters", function()
     assert.same({ "zone.enter" }, types(db))
   end)
 
+  it("does not log a continent as an arrival while travelling between zones", function()
+    local ns, db, _, api, ctx = setup()
+    local map, zone = 1443, "Example Vale"
+    api.C_Map = { GetBestMapForUnit = function() return map end,
+                  GetMapInfo = function(id)
+                    if id == 1415 then return { name = "Example Continent", mapType = 2 } end
+                    return { name = id == 1443 and "Example Vale" or "Example Coast", mapType = 3 }
+                  end }
+    api.GetRealZoneText = function() return zone end
+    ns.capture.zones.check(ctx)
+    map, zone = 1415, ""
+    ns.capture.zones.check(ctx)
+    map, zone = 1415, "Example Continent"
+    ns.capture.zones.check(ctx)
+    map, zone = 1443, "Example Vale"
+    ns.capture.zones.check(ctx)
+    map, zone = 1444, "Example Coast"
+    ns.capture.zones.check(ctx)
+    local zones = {}
+    for _, o in ipairs(db.sessions[db.active_id].observations) do zones[#zones + 1] = o.data.zone end
+    assert.same({ "Example Vale", "Example Coast" }, zones)
+  end)
+
   it("records a wipe as not defeated and stores no secret values", function()
     local ns, db, _, api, ctx = setup()
     local SECRET = {}
@@ -151,6 +174,23 @@ describe("pvp and deaths", function()
     ns.capture.pvp.check(ctx)
     assert.same({ "pvp.battleground_enter", "pvp.battleground_result", "pvp.battleground_leave" }, types(db))
     assert.equal("won", db.sessions[db.active_id].observations[2].data.outcome)
+  end)
+
+  it("logs one death when the client reports it twice, and a new death after coming back", function()
+    local ns, db, _, api, ctx = setup({ record_pvp = true })
+    local P = ns.capture.pvp
+    P.dead = false
+    api.GetRealZoneText = function() return "Example Vale" end
+    local ghost = false
+    api.UnitIsGhost = function() return ghost end
+    P.events.PLAYER_DEAD(ctx); P.events.PLAYER_DEAD(ctx)
+    ghost = true; P.events.PLAYER_ALIVE(ctx) -- released: still dead
+    P.events.PLAYER_DEAD(ctx)
+    ghost = false; P.events.PLAYER_UNGHOST(ctx)
+    P.events.PLAYER_DEAD(ctx)
+    P.events.PLAYER_ALIVE(ctx) -- resurrected on the spot
+    P.events.PLAYER_DEAD(ctx)
+    assert.same({ "player.death", "player.death", "player.death" }, types(db))
   end)
 
   it("records nothing when pvp recording is off", function()

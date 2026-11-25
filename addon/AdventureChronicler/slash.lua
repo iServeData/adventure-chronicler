@@ -9,6 +9,7 @@ local HELP = {
   "/ac pause | resume  pause or continue recording",
   "/ac note [text]  add a note (no text opens the editor)",
   "/ac mark [label]  add a bookmark",
+  "/ac title <name>  rename the session that is open",
   "/ac shot [clean]  take a screenshot (as seen, or clean scene out of combat)",
   "/ac stop  end the session",
   "/ac review  open the review window",
@@ -39,6 +40,7 @@ function ns.handleSlash(msg)
   elseif cmd == "resume" then App.resume()
   elseif cmd == "note" then App.note(rest)
   elseif cmd == "mark" then App.mark(rest)
+  elseif cmd == "title" then App.rename(rest)
   elseif cmd == "shot" then App.shot((rest == "clean" or rest == "clean_scene") and "clean_scene" or "as_seen")
   elseif cmd == "stop" then App.stop()
   elseif cmd == "" then App.recorder()

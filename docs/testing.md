@@ -54,5 +54,7 @@ Setup: install as in [install.md](install.md). Turn on Lua errors with `/console
 | 25 | `/ac` with no session, name it and press Start | Recorder window shows "Recording locally", the title and the time counting up |
 | 26 | In the recorder: Add note, Bookmark, Pause and Resume | Each one works, and the latest three entries update |
 | 27 | Press Stop in the recorder | It asks first. After Stop, the window offers Start again |
+| 28 | While recording, click the session title, type a new name and press Enter; then try Escape | The new name shows in the recorder and in review. Escape keeps the old name |
+| 29 | Take a boat or zeppelin to another continent | No "Arrived in" line for the continent itself, only the zones |
 
 Record the results in a copy of this table and add a summary to [test_results.md](test_results.md). Don't commit real exports or saved data.

@@ -97,6 +97,16 @@ function S.start(db, now, info, rand)
   return s
 end
 
+-- Rename a session. The title is the player's own words, so changing it is not counted as an edit to the
+-- observations. An empty title is allowed and shows as "Untitled".
+function S.rename(s, now, title)
+  title = util.cleanText(title or "")
+  if util.utf8len(title) > L.max_title_chars then return nil, "title_too_long" end
+  s.title = title
+  s.modified_at = now
+  return true
+end
+
 function S.pause(db, now, reason)
   local s = S.active(db)
   if not s then return nil, "no_session" end

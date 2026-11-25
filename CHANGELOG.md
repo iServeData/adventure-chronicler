@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.2.2 (prototype, unreleased)
+
+- The session title can be changed while recording: click it in the recorder, type, and press Enter
+  (Escape keeps the old name). `/ac title <name>` does the same. Renaming doesn't change any observations.
+- Boats, zeppelins and the moment after a reload no longer log the continent (for example "Arrived in Eastern Kingdoms") as a place you
+  arrived in. The next real zone is logged instead.
+- A death is logged once even when the client reports it twice. Another death is logged only after you've
+  been alive in between (released and came back, or were resurrected).
+- A bookmark with no label shows as "Bookmark" in the review list, without a trailing colon.
+
 ## 0.2.1 (prototype, unreleased)
 
 - The recorder, review, note and export windows now use the add-on's own look from the mock instead of the

@@ -6,7 +6,7 @@ your battleground results, along with notes and bookmarks you write. When you're
 out as a checked text export and turn it into a story. The story can be a private QuestersBoard Chronicle draft
 or a Markdown, text or HTML file.
 
-> Status: prototype, version 0.2.1. It has had **four partial in-game test runs** (Windows; see [docs/test_results.md](docs/test_results.md)). The automated tests run
+> Status: prototype, version 0.2.2. It has had **five partial in-game test runs** (Windows; see [docs/test_results.md](docs/test_results.md)). The automated tests run
 > against a mocked game API (see [docs/testing.md](docs/testing.md)).
 
 ## What it does and doesn't do
@@ -33,6 +33,7 @@ or a Markdown, text or HTML file.
 | `/ac pause` / `/ac resume` | Pause or continue recording |
 | `/ac note [text]` | Add a note. With no text, it opens the editor. |
 | `/ac mark [label]` | Add a bookmark |
+| `/ac title <name>` | Rename the session that is open (or click the title in the recorder) |
 | `/ac shot` / `/ac shot clean` | Take a screenshot as seen, or a clean scene (outside combat) |
 | `/ac stop` | End the session |
 | `/ac review` | Review, edit or delete sessions, notes and events |
