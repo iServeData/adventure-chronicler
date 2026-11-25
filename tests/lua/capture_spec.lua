@@ -116,6 +116,18 @@ describe("zones, instances and encounters", function()
     end
   end)
 
+  it("logs one arrival when a flight path switches the map but not the zone", function()
+    local ns, db, _, api, ctx = setup()
+    local map = 1443
+    api.C_Map = { GetBestMapForUnit = function() return map end,
+                  GetMapInfo = function(id) return { name = id == 1414 and "Example Continent" or "Example Vale" } end }
+    api.GetRealZoneText = function() return "Example Vale" end
+    ns.capture.zones.check(ctx)
+    map = 1414
+    ns.capture.zones.check(ctx)
+    assert.same({ "zone.enter" }, types(db))
+  end)
+
   it("records a wipe as not defeated and stores no secret values", function()
     local ns, db, _, api, ctx = setup()
     local SECRET = {}

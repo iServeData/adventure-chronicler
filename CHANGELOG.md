@@ -2,6 +2,8 @@
 
 ## 0.1.1 (prototype, unreleased)
 
+- Taking a flight path no longer logs the same zone arrival twice.
+- The export window stays on top of the review window instead of letting its rows show through.
 - The screenshot message uses the time the screenshot was requested, so it matches the file name more closely.
 
 From the first in-game test on Windows (WoW Forever 1.60.1, build 71091):

@@ -43,7 +43,9 @@ function Z.check(ctx)
     if ctx.onInstanceEnter then ctx.onInstanceEnter(inst) end
   end
   Z.lastInstance, Z.lastInstanceData = instKey, inst
-  local key = tostring(snap.map_id or "?") .. "|" .. tostring(snap.zone or "?")
+  -- Keyed on the zone name: on a flight path the map can switch to the continent while the zone
+  -- stays the same, which would otherwise log the same arrival twice.
+  local key = snap.zone or tostring(snap.map_id or "?")
   if key ~= Z.last then
     Z.last = key
     if snap.map_id or snap.zone then

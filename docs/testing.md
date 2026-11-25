@@ -27,7 +27,7 @@ Setup: install as in [install.md](install.md). Turn on Lua errors with `/console
 
 | # | Check | Expected |
 | --- | --- | --- |
-| 1 | Log in | No Lua errors. `/ac version` shows 0.1.0 |
+| 1 | Log in | No Lua errors. `/ac version` shows the current version |
 | 2 | `/ac start Test` | REC indicator appears and the time counts up |
 | 3 | Move to a new zone | "Arrived in ..." appears in `/ac review` |
 | 4 | Turn in a quest with no reward choice | "Turned in ..." appears, with no reward line |

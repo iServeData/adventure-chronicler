@@ -26,3 +26,9 @@ Not yet run: 4 to 9, 15 to 19 and 21 to 24, and every item on Mac.
 | 1 | Passed: `/ac version` shows 0.1.1 |
 | 13 | Passed: the chat message appeared. It said 17:06:15 for a file named `..._170614`, so the time now comes from the request instead of the confirmation |
 | 14 | Passed again (image, 17:18:22): clean scene while riding a flight path shows only the scenery and the character on the mount |
+| 5 | Passed: a reward choice gave "Reward window opened (2 choices shown)", "Chose a reward ... (probably)", "Turned in" and an inferred "Received" in the export |
+| 16 | Passed: `/reload` while recording showed "Recording continues" and the export has a reload gap |
+| 22 | Passed (one event): deleting one row is counted in the export as one deletion by the user |
+| 20 | Passed (while still recording): the second export passes the reference validator. The first pasted copy had one stray letter, and the validator rejects it as changed, as intended |
+
+Found and fixed in this run: the flight path start logged "Arrived in Desolace" twice, and the export window let review rows show through.

@@ -13,6 +13,8 @@ local f, edit, info, text
 local function build()
   local W = ns.ui.widgets
   f = W.window("AdventureChroniclerExport", "Adventure Chronicler: export", 520, 320)
+  -- Sits above the review window so its rows never show through.
+  f:SetFrameStrata("FULLSCREEN_DIALOG")
   info = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   info:SetPoint("TOPLEFT", 16, -32)
   info:SetPoint("RIGHT", -16, 0)
@@ -39,6 +41,7 @@ function X.open(exportText, s)
     ns.App.settings.include_identity and "|cffffd100included|r" or "not included"))
   edit:SetText(text)
   f:Show()
+  f:Raise()
   edit:SetFocus()
   edit:HighlightText()
 end
