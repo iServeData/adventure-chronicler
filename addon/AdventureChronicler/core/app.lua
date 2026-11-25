@@ -7,7 +7,7 @@ local L = ns.limits
 local App = { loaded = false, warnedFull = false }
 ns.App = App
 
-App.VERSION = "0.2.5"
+App.VERSION = "0.2.6"
 App.DEFAULT_SETTINGS = {
   prompt_on_instance = false,   -- ask (never auto-start) when entering a dungeon or raid
   record_pvp = true,            -- battleground entry/exit/result and own deaths
@@ -15,6 +15,7 @@ App.DEFAULT_SETTINGS = {
   include_identity = false,     -- opt-in: character name and realm in exports
   include_class_level = true,   -- class and level in exports (not identifying on their own)
   show_indicator = true,        -- the recording indicator is always shown while recording or paused
+  indicator_buttons = true,     -- small Note, Bookmark, Pause, Stop, Export, Review buttons on the indicator
   questersboard_url = "",       -- your own QuestersBoard address, set with /ac link ("" = App.DEFAULT_LINK)
 }
 

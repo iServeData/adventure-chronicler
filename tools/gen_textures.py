@@ -273,12 +273,33 @@ def ic_close(d):
     d.line(S((44, 20), (20, 44)), fill=GOLD_HI, width=w(6))
 
 
+def ic_pause(d):
+    d.rounded_rectangle(S((16, 12), (28, 52)), radius=w(3), fill=GOLD)
+    d.rounded_rectangle(S((36, 12), (48, 52)), radius=w(3), fill=GOLD)
+    d.line(S((20, 16), (20, 48)), fill=GOLD_HI, width=w(2))
+    d.line(S((40, 16), (40, 48)), fill=GOLD_HI, width=w(2))
+
+
+def ic_resume(d):
+    d.polygon(S((18, 10), (52, 32), (18, 54)), fill=GOLD)
+    d.polygon(S((23, 19), (42, 32), (23, 45)), fill=GOLD_HI)
+
+
+def ic_review(d):
+    # a framed list: three bullets with lines
+    d.rectangle(S((8, 8), (56, 56)), outline=GOLD, width=w(4))
+    for y in (22, 32, 42):
+        d.ellipse(S((15, y - 3), (21, y + 3)), fill=GOLD_HI)
+        d.line(S((26, y), (48, y)), fill=GOLD, width=w(3))
+
+
 ICONS = {
     "icon_instance": ic_instance, "icon_encounter": ic_encounter, "icon_bookmark": ic_bookmark,
     "icon_zone": ic_zone, "icon_quest": ic_quest, "icon_item": ic_item, "icon_pvp": ic_pvp,
     "icon_death": ic_death, "icon_screenshot": ic_screenshot, "icon_note": ic_note,
     "icon_other": ic_other, "icon_clock": ic_clock, "icon_stop": ic_stop, "icon_export": ic_export,
     "icon_add_note": ic_add_note, "icon_close": ic_close,
+    "icon_pause": ic_pause, "icon_resume": ic_resume, "icon_review": ic_review,
 }
 
 

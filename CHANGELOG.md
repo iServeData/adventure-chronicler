@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.2.6 (prototype, unreleased)
+
+- The REC / PAUSED indicator has a row of small buttons: Add note, Bookmark, Pause (Resume while paused),
+  Stop (asks first), Export and Review. Each has a tooltip. `/ac set buttons off` hides the row.
+
 ## 0.2.5 (prototype, unreleased)
 
 - Sessions can be renamed in the review window, including stopped ones: click the title or Rename, type, and

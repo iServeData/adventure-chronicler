@@ -70,7 +70,13 @@ describe("addon load (stubbed)", function()
       slash("help")
       slash("note A short synthetic note")
       slash("mark")
-      slash("pause"); slash("resume"); slash("stop")
+      slash("pause"); slash("resume")
+      -- The indicator's small buttons can be hidden and shown again.
+      slash("set buttons off")
+      assert.is_false(_G.AdventureChroniclerDB.settings.indicator_buttons)
+      slash("set buttons on")
+      assert.is_true(_G.AdventureChroniclerDB.settings.indicator_buttons)
+      slash("stop")
       local db = _G.AdventureChroniclerCharDB
       local s = db.sessions[db.order[1]]
       assert.equal("stopped", s.state); assert.equal(2, #s.notes)
