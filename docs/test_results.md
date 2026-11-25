@@ -17,3 +17,9 @@ Only real runs in the game client are listed here. Mocked test results are in CI
 | 20 | Passed: the export copied, the reference validator said valid, and the character name wasn't included |
 
 Not yet run: 4 to 9, 15 to 19 and 21 to 24, and every item on Mac.
+
+## Run 2: 0.1.1, Windows, WoW Forever 1.60.1, 2026-11-24
+
+| # | Result |
+| --- | --- |
+| 14 | Passed (image): the clean scene screenshot has no interface, minimap, nameplates or names above characters. Whether the settings came back afterwards wasn't reported separately |
