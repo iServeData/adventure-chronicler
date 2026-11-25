@@ -213,6 +213,23 @@ function S.observe(db, now, obs, opts)
   return "added", rec
 end
 
+-- Updates the newest observation in place when it carries this key (nothing happened in between),
+-- for example quest progress 3/8 then 4/8. Returns "amended" + the record, or nil when it can't.
+-- The record keeps its first time; data.last_t says when it was last updated.
+function S.amendLast(db, now, key, data)
+  local s = S.active(db)
+  if not s or s.state ~= "recording" or not key then return nil end
+  local last = s.observations[#s.observations]
+  if not last or s.dedupe[key] ~= last.seq then return nil end
+  local d = util.copy(data or {})
+  d.updates = ((last.data and last.data.updates) or 0) + 1
+  d.last_t = now
+  last.data = d
+  s.counters.merged = s.counters.merged + 1
+  s.modified_at = now
+  return "amended", last
+end
+
 function S.deleteObservation(s, seq, now)
   for i, o in ipairs(s.observations) do
     if o.seq == seq then

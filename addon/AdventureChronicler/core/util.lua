@@ -87,6 +87,20 @@ function util.cleanText(s)
   return s
 end
 
+-- The first n characters (code points) of s, and whether anything was cut. Callers record the cut
+-- explicitly (for example text_cut = true) so shortened text is never passed off as whole.
+function util.utf8cut(s, n)
+  if util.utf8len(s) <= n then return s, false end
+  local count, i, len = 0, 1, #s
+  while i <= len and count < n do
+    local c = s:byte(i)
+    local step = (c >= 0xF0 and 4) or (c >= 0xE0 and 3) or (c >= 0xC2 and 2) or 1
+    i = i + step
+    count = count + 1
+  end
+  return util.utf8clean(s:sub(1, i - 1)), true
+end
+
 -- Parse an item ID from an item link or item string.
 function util.itemIdFromLink(link)
   if type(link) ~= "string" then return nil end

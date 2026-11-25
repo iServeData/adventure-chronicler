@@ -10,7 +10,7 @@ local E = {}
 ns.Export = E
 
 E.FORMAT = "adventure-chronicler.session"
-E.SCHEMA_VERSION = 1
+E.SCHEMA_VERSION = 2
 E.PREFIX = "ACX1"
 
 local A = json.array
@@ -26,7 +26,7 @@ local function segmentsOut(s)
 end
 
 -- Arrays inside observation data are marked by key name so empty lists encode as [].
-local ARRAY_KEYS = { choices = true, guaranteed = true, items = true }
+local ARRAY_KEYS = { choices = true, guaranteed = true, items = true, objectives = true, quests = true }
 
 local function dataOut(v)
   if type(v) ~= "table" then return v end
@@ -44,12 +44,18 @@ local function dataOut(v)
   return out
 end
 
-local function observationsOut(s)
+-- The quest giver's full text leaves the addon only while /ac set questtext is on at export time.
+local function observationsOut(s, keepQuestText)
   local out = A()
   for _, o in ipairs(s.observations) do
+    local data = o.data or {}
+    if o.type == "quest.accepted" and data.description ~= nil and not keepQuestText then
+      data = util.copy(data)
+      data.description = nil
+    end
     out[#out + 1] = {
       seq = o.seq, t = o.t, type = o.type, certainty = o.certainty,
-      data = dataOut(o.data or {}), repeats = o.repeats or 0, clock_note = orNull(o.clock_note),
+      data = dataOut(data), repeats = o.repeats or 0, clock_note = orNull(o.clock_note),
     }
   end
   return out
@@ -94,6 +100,7 @@ function E.build(s, settings, recorderVersion)
       character_identity = includeIdentity,
       class_and_level = includeClassLevel,
       personal_loot = settings.record_personal_loot == true,
+      quest_text = settings.record_quest_text == true,
     },
     character = character,
     session = {
@@ -101,7 +108,7 @@ function E.build(s, settings, recorderVersion)
       started_at = s.started_at, ended_at = orNull(s.ended_at), clock = "unix_seconds",
       segments = segmentsOut(s),
     },
-    observations = observationsOut(s),
+    observations = observationsOut(s, settings.record_quest_text == true),
     author = { notes = notesOut(s) },
     integrity = {
       observations_dropped = s.counters.dropped or 0,

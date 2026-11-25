@@ -2,6 +2,13 @@
 
 Built from `changelog.toml` by `tools/build_changelog.py`; edit that file, not this one.
 
+## 0.3.0 · 2026-11-24 · Quest objectives and progress (prototype, unreleased)
+
+- **New** (Recorder): Accepting a quest records its title, objectives (for example "Fixture Wolf slain: 0/8") and short objective summary. Objective progress is recorded as it changes; changes in a row for the same objective become one entry with the last count.
+- **New** (Recorder): Pressing Start lists the quests already in your log, marked "already in progress".
+- **New** (Settings): `/ac set questtext on` also keeps the quest giver's full text. It's off by default and left out of exports unless it's on when you export.
+- **Improved** (Export): Exports use schema version 2, which adds the quest log entries. Readers that know version 2 still accept version 1 files.
+
 ## 0.2.6 · 2026-11-24 · Quick buttons on the recording indicator (prototype, unreleased)
 
 - **New** (Recorder): The REC / PAUSED indicator has a row of small buttons: Add note, Bookmark, Pause (Resume while paused), Stop (asks first), Export and Review, each with a tooltip. `/ac set buttons off` hides the row.

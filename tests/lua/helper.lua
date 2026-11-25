@@ -64,6 +64,7 @@ function H.ctx(ns, db, clock, api, settings)
   return {
     api = api or H.api(), now = clock.now, settings = settings or {},
     record = function(obs, opts) return ns.Session.observe(db, clock.now(), obs, opts) end,
+    amend = function(key, data) return ns.Session.amendLast(db, clock.now(), key, data) end,
   }
 end
 

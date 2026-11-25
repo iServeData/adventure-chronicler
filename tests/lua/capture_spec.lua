@@ -214,3 +214,116 @@ describe("loot", function()
     assert.equal("seen", o.certainty); assert.equal(123, o.data.items[1].item_id)
   end)
 end)
+
+-- A fake quest log: entries are headers or quests { id, title, level, objectives = { {text, kind, done} } }.
+local function questLog(api, entries)
+  api.questSelection = 0
+  api.GetNumQuestLogEntries = function() return #entries end
+  api.GetQuestLogTitle = function(i)
+    local e = entries[i]
+    if e.header then return e.header, nil, nil, true end
+    return e.title, e.level or 10, nil, false, false, e.complete and 1 or nil, nil, e.id
+  end
+  api.GetNumQuestLeaderBoards = function(i) return #(entries[i].objectives or {}) end
+  api.GetQuestLogLeaderBoard = function(j, i)
+    local o = entries[i].objectives[j]
+    return o[1], o[2] or "monster", o[3] or false
+  end
+  api.GetQuestLogSelection = function() return api.questSelection end
+  api.SelectQuestLogEntry = function(i) api.questSelection = i end
+  api.GetQuestLogQuestText = function()
+    local e = entries[api.questSelection]
+    return e and e.description, e and e.summary
+  end
+  return entries
+end
+
+local function last(db) local obs = db.sessions[db.active_id].observations return obs[#obs] end
+
+describe("quest log", function()
+  it("records an accepted quest with its objectives and summary, but not the full text by default", function()
+    local ns, db, _, api, ctx = setup()
+    questLog(api, { { header = "Example Vale" },
+      { id = 201, title = "Fixture Hunt", level = 12, summary = "Slay 8 Fixture Wolves.",
+        description = "A long synthetic speech.", objectives = { { "Fixture Wolf slain: 0/8" } } } })
+    api.questSelection = 1
+    ns.capture.quests.onAccepted(ctx, 2, 201)
+    local o = last(db)
+    assert.equal("quest.accepted", o.type)
+    assert.equal("Fixture Hunt", o.data.title)
+    assert.equal("Slay 8 Fixture Wolves.", o.data.summary)
+    assert.is_nil(o.data.description)
+    assert.same({ index = 1, text = "Fixture Wolf slain: 0/8", type = "monster", finished = false,
+                  fulfilled = 0, required = 8 }, o.data.objectives[1])
+    assert.equal(1, api.questSelection) -- the player's own selection is put back
+  end)
+
+  it("keeps the full text only when the setting is on, and says when text was shortened", function()
+    local ns, db, _, api, ctx = setup({ record_quest_text = true })
+    questLog(api, { { id = 202, title = "Fixture Tale", summary = "Talk.", description = string.rep("x", 5000) } })
+    ns.capture.quests.onAccepted(ctx, 202) -- one-argument form
+    local o = last(db)
+    assert.equal(4000, #o.data.description)
+    assert.is_true(o.data.text_cut)
+  end)
+
+  it("records progress, merging changes in a row into one entry with the last count", function()
+    local ns, db, c, api, ctx = setup()
+    local log = questLog(api, { { id = 203, title = "Fixture Hunt", objectives = { { "Fixture Wolf slain: 0/8" } } } })
+    ns.capture.quests.onLogUpdate(ctx) -- first reading: baseline only
+    assert.same({}, types(db))
+    for n = 1, 8 do
+      c.advance(20)
+      log[1].objectives[1] = { "Fixture Wolf slain: " .. n .. "/8", "monster", n == 8 }
+      ns.capture.quests.onLogUpdate(ctx)
+      ns.capture.quests.onLogUpdate(ctx) -- an update with no change adds nothing
+    end
+    assert.same({ "quest.progress" }, types(db))
+    local o = last(db)
+    assert.equal(8, o.data.fulfilled)
+    assert.is_true(o.data.finished)
+    assert.equal(7, o.data.updates)
+    assert.equal(c.now(), o.data.last_t)
+    assert.equal(1800000020, o.t) -- keeps the time of the first change
+  end)
+
+  it("starts a new progress entry when something else happened in between", function()
+    local ns, db, _, api, ctx = setup()
+    local log = questLog(api, { { id = 204, title = "Fixture Hunt", objectives = { { "Fixture Wolf slain: 0/8" } } } })
+    ns.capture.quests.onLogUpdate(ctx)
+    log[1].objectives[1] = { "Fixture Wolf slain: 1/8" }; ns.capture.quests.onLogUpdate(ctx)
+    ctx.record({ type = "player.death", data = {} })
+    log[1].objectives[1] = { "Fixture Wolf slain: 2/8" }; ns.capture.quests.onLogUpdate(ctx)
+    assert.same({ "quest.progress", "player.death", "quest.progress" }, types(db))
+  end)
+
+  it("does not count a quest appearing in the log as progress", function()
+    local ns, db, _, api, ctx = setup()
+    local log = questLog(api, {})
+    ns.capture.quests.onLogUpdate(ctx)
+    log[1] = { id = 205, title = "New", objectives = { { "Fixture Crate: 2/3" } } }
+    ns.capture.quests.onLogUpdate(ctx)
+    assert.same({}, types(db))
+  end)
+
+  it("lists quests already in the log at Start, marked seen", function()
+    local ns, db, _, api, ctx = setup()
+    questLog(api, { { header = "Example Vale" }, { id = 206, title = "Fixture Errand", complete = true,
+                    objectives = { { "Fixture Crate: 3/3", "object", true } } } })
+    ns.capture.quests.snapshot(ctx)
+    local o = last(db)
+    assert.equal("quest.snapshot", o.type)
+    assert.equal("seen", o.certainty)
+    assert.equal(1, o.data.listed)
+    assert.is_true(o.data.quests[1].complete)
+    assert.equal("Quest log at start: 1 quest already in progress (seen)", ns.describe.observation(o))
+  end)
+
+  it("never fails when the quest log functions are missing", function()
+    local ns, db, _, _, ctx = setup()
+    ns.capture.quests.onAccepted(ctx, 207)
+    ns.capture.quests.onLogUpdate(ctx)
+    ns.capture.quests.snapshot(ctx)
+    assert.same({ "quest.accepted" }, types(db))
+  end)
+end)

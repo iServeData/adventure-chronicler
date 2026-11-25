@@ -72,5 +72,21 @@ describe("timeline wording", function()
   end)
 end)
 
+describe("quest text consent at export", function()
+  it("leaves the full quest text out unless the setting is on when exporting", function()
+    local ns = H.load()
+    local db = ns.Session.newStore()
+    local s = ns.Session.start(db, 1800000000, {})
+    ns.Session.observe(db, 1800000001, { type = "quest.accepted", certainty = "confirmed",
+      data = { quest_id = 1, title = "Fixture Tale", description = "Synthetic speech." } })
+    local off = ns.Export.build(s, {}, "0.3.0")
+    assert.is_nil(off.observations[1].data.description)
+    assert.is_false(off.consent.quest_text)
+    local on = ns.Export.build(s, { record_quest_text = true }, "0.3.0")
+    assert.equal("Synthetic speech.", on.observations[1].data.description)
+    assert.equal("Synthetic speech.", s.observations[1].data.description) -- the saved record is untouched
+  end)
+end)
+
 -- tests/lua/gen_fixture.lua reuses this sample to regenerate the fixture.
 return { sample = sample }

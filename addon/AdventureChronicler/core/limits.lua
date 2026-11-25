@@ -14,6 +14,10 @@ ns.limits = {
   reload_gap = 120,             -- seconds: a gap up to this long on load is treated as a UI reload
   offline_pause_after = 900,    -- seconds: after an offline gap this long, the session is paused, not resumed
   max_export_bytes = 524288,    -- 512 KiB per exported session
+  max_quest_summary_chars = 1000, -- a quest's short objective text, kept by default
+  max_quest_text_chars = 4000,  -- a quest's full text from the quest giver (only with /ac set questtext on)
+  max_snapshot_quests = 40,     -- quests listed in the "already in progress" snapshot at Start
+  max_objectives = 16,          -- objectives kept per quest
 }
 
 return ns.limits

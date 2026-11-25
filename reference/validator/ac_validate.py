@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Reference validator for Adventure Chronicler exports (schema version 1).
+"""Reference validator for Adventure Chronicler exports (schema versions 1 and 2).
+
+Version 2 adds quest log observations (quest.accepted, quest.progress, quest.snapshot) and the
+consent.quest_text flag. Version 1 files are still accepted unchanged.
 
 Python standard library only. It never executes, imports or evaluates the input: the text is
 parsed as JSON with strict limits, then checked field by field. Unknown fields are rejected.
@@ -30,6 +33,11 @@ CERTAINTY = {"confirmed", "inferred", "seen", "uncertain"}
 STATES = {"recording", "paused", "stopped"}
 SEGMENT_KINDS = {"recording", "paused", "gap"}
 SEGMENT_REASONS = {None, "player", "reload", "offline", "unknown", "auto_after_gap"}
+SCHEMA_VERSIONS = (1, 2)
+V2_TYPES = {"quest.accepted", "quest.progress", "quest.snapshot"}
+CONSENT_KEYS = {1: ("character_identity", "class_and_level", "personal_loot"),
+                2: ("character_identity", "class_and_level", "personal_loot", "quest_text")}
+QUEST_LIMITS = {"objectives": 16, "snapshot_quests": 40, "summary_chars": 1000, "text_chars": 4000}
 
 
 class ValidationError(ValueError):
@@ -180,6 +188,41 @@ def _name(v, w):
     _str(v, w, 200, nullable=True)
 
 
+def _count(v, w):
+    _int(v, w, 0, 10**6, nullable=True)
+
+
+def _objective(v, where):
+    _obj(v, where, ("index",), ("text", "type", "fulfilled", "required", "finished"))
+    _int(v["index"], where + ".index", 1, 64)
+    _str(v.get("text"), where + ".text", 200, nullable=True)
+    _str(v.get("type"), where + ".type", 40, nullable=True)
+    _count(v.get("fulfilled"), where + ".fulfilled")
+    _count(v.get("required"), where + ".required")
+    _bool(v.get("finished", False), where + ".finished")
+
+
+def _objectives(v, where):
+    for i, o in enumerate(_list(v, where, QUEST_LIMITS["objectives"])):
+        _objective(o, f"{where}[{i}]")
+
+
+def _level(v, w):
+    _int(v, w, 0, 1000, nullable=True)
+
+
+def _snapshot_quests(v, where):
+    for i, q in enumerate(_list(v, where, QUEST_LIMITS["snapshot_quests"])):
+        w = f"{where}[{i}]"
+        _obj(q, w, ("quest_id",), ("title", "level", "complete", "objectives"))
+        _id(q["quest_id"], w + ".quest_id")
+        _name(q.get("title"), w + ".title")
+        _level(q.get("level"), w + ".level")
+        _bool(q.get("complete", False), w + ".complete")
+        if "objectives" in q:
+            _objectives(q["objectives"], w + ".objectives")
+
+
 # Per observation type: field -> checker. Every field is optional because the game may not supply it.
 OBS_DATA = {
     "zone.enter": {"map_id": _id, "map": _name, "zone": _name},
@@ -195,6 +238,17 @@ OBS_DATA = {
                               "item_id": _id, "name": _name},
     "quest.turned_in": {"quest_id": _id, "title": _name, "xp": lambda v, w: _int(v, w, 0, 10**9),
                         "money_copper": lambda v, w: _int(v, w, 0, 10**12)},
+    "quest.accepted": {"quest_id": _id, "title": _name, "level": _level, "objectives": _objectives,
+                       "summary": lambda v, w: _str(v, w, QUEST_LIMITS["summary_chars"], nullable=True),
+                       "description": lambda v, w: _str(v, w, QUEST_LIMITS["text_chars"], nullable=True),
+                       "text_cut": _bool},
+    "quest.progress": {"quest_id": _id, "title": _name, "index": lambda v, w: _int(v, w, 1, 64),
+                       "text": lambda v, w: _str(v, w, 200, nullable=True), "fulfilled": _count,
+                       "required": _count, "finished": _bool,
+                       "updates": lambda v, w: _int(v, w, 0, 10**6),
+                       "last_t": lambda v, w: _int(v, w, TIME_MIN, TIME_MAX)},
+    "quest.snapshot": {"quests": _snapshot_quests, "listed": lambda v, w: _int(v, w, 0, 10**4),
+                       "kept": lambda v, w: _int(v, w, 0, 10**4)},
     "item.received": {"quest_id": _id, "item_id": _id, "name": _name,
                       "count_delta": lambda v, w: _int(v, w, 1, 10**6),
                       "basis": lambda v, w: _str(v, w, choices={"bag_count_increase_after_turn_in"})},
@@ -212,11 +266,11 @@ OBS_DATA = {
 }
 
 
-def _observation(o, where):
+def _observation(o, where, version=2):
     _obj(o, where, ("seq", "t", "type", "certainty", "data", "repeats", "clock_note"))
     _int(o["seq"], where + ".seq", 1, 10**7)
     _int(o["t"], where + ".t", TIME_MIN, TIME_MAX)
-    if o["type"] not in OBS_DATA:
+    if o["type"] not in OBS_DATA or (version < 2 and o["type"] in V2_TYPES):
         raise ValidationError(f"{where}.type is not a known observation type")
     _str(o["certainty"], where + ".certainty", choices=CERTAINTY)
     _int(o["repeats"], where + ".repeats", 0, 10**6)
@@ -232,8 +286,9 @@ def validate_document(doc: dict) -> dict:
                          "observations", "author", "integrity"))
     if doc["format"] != "adventure-chronicler.session":
         raise ValidationError("export.format is not adventure-chronicler.session")
-    if doc["schema_version"] != 1:
-        raise ValidationError("this validator only understands schema version 1")
+    version = doc["schema_version"]
+    if isinstance(version, bool) or version not in SCHEMA_VERSIONS:
+        raise ValidationError("this validator only understands schema versions 1 and 2")
     r = _obj(doc["recorder"], "recorder", ("name", "version"))
     _str(r["name"], "recorder.name", 60, choices={"AdventureChronicler"})
     _str(r["version"], "recorder.version", 40)
@@ -244,7 +299,7 @@ def validate_document(doc: dict) -> dict:
     _str(g["build"], "game.build", 40, nullable=True)
     _int(g["interface"], "game.interface", 0, 10**7, nullable=True)
     _str(g["locale"], "game.locale", 10, nullable=True)
-    c = _obj(doc["consent"], "consent", ("character_identity", "class_and_level", "personal_loot"))
+    c = _obj(doc["consent"], "consent", CONSENT_KEYS[version])
     for k in c:
         _bool(c[k], "consent." + k)
     ch = _obj(doc["character"], "character", (), ("name", "realm", "class", "level"))
@@ -282,7 +337,10 @@ def validate_document(doc: dict) -> dict:
 
     seqs = set()
     for i, o in enumerate(_list(doc["observations"], "observations", LIMITS["observations"])):
-        _observation(o, f"observations[{i}]")
+        _observation(o, f"observations[{i}]", version)
+        if o["type"] == "quest.accepted" and o["data"].get("description") is not None \
+                and not c.get("quest_text"):
+            raise ValidationError(f"observations[{i}].data.description present without consent")
         if o["seq"] in seqs:
             raise ValidationError(f"observations[{i}].seq is repeated")
         seqs.add(o["seq"])

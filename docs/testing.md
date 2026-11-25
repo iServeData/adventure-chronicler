@@ -9,7 +9,7 @@ These run without the game. They use a fake game API, so they show the logic wor
 
 | Suite | Command | Covers |
 | --- | --- | --- |
-| Lua (busted) | `busted` | Session lifecycle, reload and offline gaps, dedupe, out-of-order times, limits and retention, Unicode and long notes, quest reward cases (no choice, choices, cancelled, changed choice, repeated window, rapid turn-ins, uncached items), encounters with restricted values, PvP and deaths, loot defaults, screenshot restoration, JSON, CRC-32, envelope, privacy defaults, a fixed export fixture, and a stubbed load of every `.toc` file |
+| Lua (busted) | `busted` | Session lifecycle, reload and offline gaps, dedupe, out-of-order times, limits and retention, Unicode and long notes, quest log cases (accepted quests and objectives, progress merging, Start snapshot, quest text consent), quest reward cases (no choice, choices, cancelled, changed choice, repeated window, rapid turn-ins, uncached items), encounters with restricted values, PvP and deaths, loot defaults, screenshot restoration, JSON, CRC-32, envelope, privacy defaults, a fixed export fixture, and a stubbed load of every `.toc` file |
 | Lua lint | `luacheck .` | Undeclared globals and common mistakes |
 | Python | `python3 -m unittest discover -s reference/tests -v` | Envelope, strict parsing, schema, duplicates, scaffold determinism, no invented outcomes, truncation summaries, HTML escaping |
 | Schema | `python3 tools/gen_schema.py --check` | The schema file matches the validator |
@@ -63,5 +63,11 @@ Setup: install as in [install.md](install.md). Turn on Lua errors with `/console
 | 34 | `/ac link http://example.org`, then `/ac link https://example.org`, press the button, then `/ac link clear` | The http address is refused. The https one shows selected and Ctrl+C copies it. After clear, the default is back |
 | 35 | In `/ac review`, pick a stopped session, click its title (or Rename), type a new name and press Enter; then try Escape on another | The new name shows in the list and the header, and in a new export. Escape keeps the old name |
 | 36 | While recording, use each small button under REC: Note, Bookmark, Pause (then Resume), Export, Review, Stop | Each does the same as its command. Pause turns into Resume and back. Stop asks first. `/ac set buttons off` hides the row and `on` brings it back |
+| 37 | While recording, accept a quest with a kill or collect objective | "Accepted <quest> (1 objective)". The export's `quest.accepted` has the objective text and the summary, and no `description` |
+| 38 | Make progress on that objective several times in a row, then turn it in | One "Progress on <quest>: ... n/n (done)" line with the last count, then "Turned in ..." |
+| 39 | Progress, die (or bookmark), then progress again | Two progress lines, with the death or bookmark in between |
+| 40 | Press Start with quests already in the log (including one under a collapsed header) | "Quest log at start: N quests already in progress (seen)". Note whether quests under collapsed headers were counted |
+| 41 | `/ac set questtext on`, accept a quest, export; then `/ac set questtext off` and export again | The first export has the quest giver's text in `description`; the second doesn't. Both validate |
+| 42 | With the quest log open and a quest selected, accept another quest | Your selection in the quest log doesn't change |
 
 Record the results in a copy of this table and add a summary to [test_results.md](test_results.md). Don't commit real exports or saved data.

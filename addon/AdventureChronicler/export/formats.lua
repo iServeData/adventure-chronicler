@@ -54,11 +54,33 @@ end
 
 -- Timeline rows: observations (described the same way as in game), notes and bookmarks, and the
 -- paused and gap segments, so missing time is visible rather than hidden.
+-- Extra detail for files: the objectives of an accepted quest and the quests listed at Start, so a
+-- writer can see boss names and objectives. Labelled as recorded; the quest log is not proof.
+local function questDetail(o)
+  local d = o.data or {}
+  local list = {}
+  if o.type == "quest.accepted" then
+    for _, x in ipairs(d.objectives or {}) do
+      if type(x.text) == "string" then list[#list + 1] = x.text end
+    end
+    if #list > 0 then return ". Objectives as recorded: " .. table.concat(list, "; ") end
+  elseif o.type == "quest.snapshot" then
+    for _, q in ipairs(d.quests or {}) do
+      if type(q.title) == "string" then list[#list + 1] = q.title .. (q.complete == true and " (complete)" or "") end
+    end
+    local more = (d.listed or #list) - #list
+    if #list > 0 then
+      return ": " .. table.concat(list, "; ") .. (more > 0 and string.format(" (and %d more not listed)", more) or "")
+    end
+  end
+  return ""
+end
+
 local function rows(doc)
   local out = {}
   for _, o in ipairs(doc.observations) do
     if o.type ~= "marker.bookmark" then
-      out[#out + 1] = { t = o.t, order = 1, seq = o.seq, text = ns.describe.observation(o) }
+      out[#out + 1] = { t = o.t, order = 1, seq = o.seq, text = ns.describe.observation(o) .. questDetail(o) }
     end
   end
   for i, n in ipairs(doc.author.notes) do

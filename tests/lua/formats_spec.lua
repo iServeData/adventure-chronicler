@@ -77,3 +77,12 @@ describe("readable formats", function()
     local _, w = render(ns, "text", s); assert.truthy(w:match("_deadmines_with_friends%.txt$"), w)
   end)
 end)
+
+describe("quest detail in files", function()
+  it("lists objectives as recorded in the Markdown timeline", function()
+    local md = render(H.load(), "markdown")
+    assert.truthy(md:find("Accepted Synthetic Quest (1 objective). Objectives as recorded: Fixture Wolf slain: 0/8",
+      1, true))
+    assert.truthy(md:find("Progress on Synthetic Quest: Fixture Wolf slain: 8/8 (done)", 1, true))
+  end)
+end)

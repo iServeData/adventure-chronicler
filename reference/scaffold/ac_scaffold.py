@@ -61,6 +61,15 @@ def describe(o: dict) -> str | None:
         r = {"success": "defeated", "wipe_or_reset": "not defeated (wipe or reset)"}.get(d.get("result"),
                                                                                          "result unknown")
         s = f"Encounter ended: {d.get('name') or 'unknown'}, {r}"
+    elif t == "quest.accepted":
+        objs = [x.get("text") for x in d.get("objectives") or [] if x.get("text")]
+        s = "Accepted " + _q(d) + (f" (objectives as recorded: {'; '.join(objs)})" if objs else "")
+    elif t == "quest.progress":
+        what = d.get("text") or f"objective {d.get('index', '?')}"
+        s = f"Progress on {_q(d)} as recorded: {what}" + (" (done)" if d.get("finished") else "")
+    elif t == "quest.snapshot":
+        n = d.get("listed", len(d.get("quests") or []))
+        s = f"Quest log at start: {n} quest{'' if n == 1 else 's'} already in progress"
     elif t == "quest.rewards_offered":
         return None
     elif t == "quest.reward_selected":

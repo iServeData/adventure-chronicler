@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-"""Writes schema/chronicle-export.v1.schema.json (JSON Schema 2020-12) for the export body.
+"""Writes schema/chronicle-export.v1.schema.json and .v2.schema.json (JSON Schema 2020-12) for the
+export body. Version 2 adds the quest log observations and consent.quest_text.
 
 The reference validator (reference/validator/ac_validate.py) is the authority; this schema is a
 portable description for other implementations. Regenerate after changing the validator.
@@ -28,6 +29,11 @@ instance = obj({"id": nint, "name": nstr, "type": nstr, "difficulty_id": nint, "
                 "max_players": nint})
 
 
+objective = obj({"index": {"type": "integer", "minimum": 1}, "text": nstr, "type": nstr, "fulfilled": nint,
+                 "required": nint, "finished": {"type": "boolean"}}, ["index"])
+objectives = {"type": "array", "maxItems": v.QUEST_LIMITS["objectives"], "items": objective}
+
+
 def enum(*vals):
     return {"enum": list(vals)}
 
@@ -44,6 +50,17 @@ DATA = {
     "quest.reward_selected": {"quest_id": nint, "choice_index": {"type": "integer"}, "item_id": nint, "name": nstr},
     "quest.turned_in": {"quest_id": nint, "title": nstr, "xp": {"type": "integer"},
                         "money_copper": {"type": "integer"}},
+    "quest.accepted": {"quest_id": nint, "title": nstr, "level": nint, "objectives": objectives,
+                       "summary": {"type": ["string", "null"], "maxLength": v.QUEST_LIMITS["summary_chars"]},
+                       "description": {"type": ["string", "null"], "maxLength": v.QUEST_LIMITS["text_chars"]},
+                       "text_cut": {"type": "boolean"}},
+    "quest.progress": {"quest_id": nint, "title": nstr, "index": {"type": "integer", "minimum": 1},
+                       "text": nstr, "fulfilled": nint, "required": nint, "finished": {"type": "boolean"},
+                       "updates": {"type": "integer", "minimum": 0}, "last_t": t},
+    "quest.snapshot": {"quests": {"type": "array", "maxItems": v.QUEST_LIMITS["snapshot_quests"], "items": obj({
+                           "quest_id": nint, "title": nstr, "level": nint, "complete": {"type": "boolean"},
+                           "objectives": objectives}, ["quest_id"])},
+                       "listed": {"type": "integer"}, "kept": {"type": "integer"}},
     "item.received": {"quest_id": nint, "item_id": nint, "name": nstr, "count_delta": {"type": "integer"},
                       "basis": enum("bag_count_increase_after_turn_in")},
     "loot.seen": {"items": items},
@@ -58,66 +75,78 @@ DATA = {
 }
 assert set(DATA) == set(v.OBS_DATA), "schema and validator disagree on observation types"
 
-observation = {
-    "type": "object", "additionalProperties": False,
-    "required": ["seq", "t", "type", "certainty", "data", "repeats", "clock_note"],
-    "properties": {"seq": {"type": "integer", "minimum": 1}, "t": t, "type": enum(*sorted(DATA)),
-                   "certainty": enum(*sorted(v.CERTAINTY)), "data": {"type": "object"},
-                   "repeats": {"type": "integer", "minimum": 0},
-                   "clock_note": {"enum": [None, "earlier_than_previous"]}},
-    "allOf": [{"if": {"properties": {"type": {"const": k}}},
-               "then": {"properties": {"data": obj(p)}}} for k, p in sorted(DATA.items())],
-}
+def build(version):
+    data = {k: p for k, p in DATA.items() if version >= 2 or k not in v.V2_TYPES}
+    observation = {
+        "type": "object", "additionalProperties": False,
+        "required": ["seq", "t", "type", "certainty", "data", "repeats", "clock_note"],
+        "properties": {"seq": {"type": "integer", "minimum": 1}, "t": t, "type": enum(*sorted(data)),
+                       "certainty": enum(*sorted(v.CERTAINTY)), "data": {"type": "object"},
+                       "repeats": {"type": "integer", "minimum": 0},
+                       "clock_note": {"enum": [None, "earlier_than_previous"]}},
+        "allOf": [{"if": {"properties": {"type": {"const": k}}},
+                   "then": {"properties": {"data": obj(p)}}} for k, p in sorted(data.items())],
+    }
 
-schema = {
-    "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "urn:adventure-chronicler:chronicle-export:v1",
-    "title": "Adventure Chronicler session export, schema version 1",
-    "description": "Body of an ACX1 envelope (ACX1:<byte length>:<crc32 hex>:<json>). Self-reported data; "
-                   "not proof of gameplay. See docs/schema.md.",
-    **obj({
-        "format": {"const": "adventure-chronicler.session"},
-        "schema_version": {"const": 1},
-        "recorder": obj({"name": {"const": "AdventureChronicler"}, "version": {"type": "string", "maxLength": 40}},
-                        ["name", "version"]),
-        "game": obj({"id": {"const": "wow"}, "flavor": {"type": "string"}, "client_version": nstr, "build": nstr,
-                     "interface": nint, "locale": nstr},
-                    ["id", "flavor", "client_version", "build", "interface", "locale"]),
-        "consent": obj({k: {"type": "boolean"} for k in ("character_identity", "class_and_level", "personal_loot")},
-                       ["character_identity", "class_and_level", "personal_loot"]),
-        "character": obj({"name": nstr, "realm": nstr, "class": nstr, "level": nint}),
-        "session": obj({
-            "id": {"type": "string", "pattern": "^s-[0-9a-f]{8}-[0-9a-f]{12}$"},
-            "title": {"type": "string", "maxLength": v.LIMITS["title_chars"]},
-            "state": enum(*sorted(v.STATES)), "interrupted": {"type": "boolean"},
-            "started_at": t, "ended_at": nt, "clock": {"const": "unix_seconds"},
-            "segments": {"type": "array", "maxItems": v.LIMITS["segments"], "items": obj({
-                "kind": enum(*sorted(v.SEGMENT_KINDS)), "start": t, "finish": nt,
-                "reason": {"enum": [None, "player", "reload", "offline", "unknown", "auto_after_gap"]}},
-                ["kind", "start", "finish", "reason"])},
-        }, ["id", "title", "state", "interrupted", "started_at", "ended_at", "clock", "segments"]),
-        "observations": {"type": "array", "maxItems": v.LIMITS["observations"], "items": observation},
-        "author": obj({"notes": {"type": "array", "maxItems": v.LIMITS["notes"], "items": obj({
-            "id": {"type": "integer", "minimum": 1}, "t": t, "kind": enum("bookmark", "note"),
-            "text": {"type": "string", "maxLength": v.LIMITS["note_chars"]}, "edited_at": nt},
-            ["id", "t", "kind", "text", "edited_at"])}}, ["notes"]),
-        "integrity": obj({"observations_dropped": {"type": "integer", "minimum": 0},
-                          "dropped_by_type": {"type": "object", "additionalProperties": {"type": "integer"}},
-                          "merged_repeats": {"type": "integer", "minimum": 0},
-                          "deleted_by_user": {"type": "integer", "minimum": 0},
-                          "self_reported": {"const": True}},
-                         ["observations_dropped", "dropped_by_type", "merged_repeats", "deleted_by_user",
-                          "self_reported"]),
-    }, ["format", "schema_version", "recorder", "game", "consent", "character", "session", "observations",
-        "author", "integrity"]),
-}
+    schema = {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "$id": f"urn:adventure-chronicler:chronicle-export:v{version}",
+        "title": f"Adventure Chronicler session export, schema version {version}",
+        "description": "Body of an ACX1 envelope (ACX1:<byte length>:<crc32 hex>:<json>). Self-reported data; "
+                       "not proof of gameplay. See docs/schema.md.",
+        **obj({
+            "format": {"const": "adventure-chronicler.session"},
+            "schema_version": {"const": version},
+            "recorder": obj({"name": {"const": "AdventureChronicler"}, "version": {"type": "string", "maxLength": 40}},
+                            ["name", "version"]),
+            "game": obj({"id": {"const": "wow"}, "flavor": {"type": "string"}, "client_version": nstr, "build": nstr,
+                         "interface": nint, "locale": nstr},
+                        ["id", "flavor", "client_version", "build", "interface", "locale"]),
+            "consent": obj({k: {"type": "boolean"} for k in v.CONSENT_KEYS[version]},
+                           list(v.CONSENT_KEYS[version])),
+            "character": obj({"name": nstr, "realm": nstr, "class": nstr, "level": nint}),
+            "session": obj({
+                "id": {"type": "string", "pattern": "^s-[0-9a-f]{8}-[0-9a-f]{12}$"},
+                "title": {"type": "string", "maxLength": v.LIMITS["title_chars"]},
+                "state": enum(*sorted(v.STATES)), "interrupted": {"type": "boolean"},
+                "started_at": t, "ended_at": nt, "clock": {"const": "unix_seconds"},
+                "segments": {"type": "array", "maxItems": v.LIMITS["segments"], "items": obj({
+                    "kind": enum(*sorted(v.SEGMENT_KINDS)), "start": t, "finish": nt,
+                    "reason": {"enum": [None, "player", "reload", "offline", "unknown", "auto_after_gap"]}},
+                    ["kind", "start", "finish", "reason"])},
+            }, ["id", "title", "state", "interrupted", "started_at", "ended_at", "clock", "segments"]),
+            "observations": {"type": "array", "maxItems": v.LIMITS["observations"], "items": observation},
+            "author": obj({"notes": {"type": "array", "maxItems": v.LIMITS["notes"], "items": obj({
+                "id": {"type": "integer", "minimum": 1}, "t": t, "kind": enum("bookmark", "note"),
+                "text": {"type": "string", "maxLength": v.LIMITS["note_chars"]}, "edited_at": nt},
+                ["id", "t", "kind", "text", "edited_at"])}}, ["notes"]),
+            "integrity": obj({"observations_dropped": {"type": "integer", "minimum": 0},
+                              "dropped_by_type": {"type": "object", "additionalProperties": {"type": "integer"}},
+                              "merged_repeats": {"type": "integer", "minimum": 0},
+                              "deleted_by_user": {"type": "integer", "minimum": 0},
+                              "self_reported": {"const": True}},
+                             ["observations_dropped", "dropped_by_type", "merged_repeats", "deleted_by_user",
+                              "self_reported"]),
+        }, ["format", "schema_version", "recorder", "game", "consent", "character", "session", "observations",
+            "author", "integrity"]),
+    }
+    return schema
 
-out = os.path.join(os.path.dirname(__file__), "..", "schema", "chronicle-export.v1.schema.json")
-text = json.dumps(schema, indent=2, sort_keys=True) + "\n"
-if "--check" in sys.argv:
-    with open(out, encoding="utf-8") as fh:
-        if fh.read() != text:
-            sys.exit("schema/chronicle-export.v1.schema.json is out of date; run tools/gen_schema.py")
-else:
-    with open(out, "w", encoding="utf-8") as fh:
-        fh.write(text)
+
+stale = []
+for version in v.SCHEMA_VERSIONS:
+    name = f"chronicle-export.v{version}.schema.json"
+    out = os.path.join(os.path.dirname(__file__), "..", "schema", name)
+    text = json.dumps(build(version), indent=2, sort_keys=True) + "\n"
+    if "--check" in sys.argv:
+        try:
+            with open(out, encoding="utf-8") as fh:
+                if fh.read() != text:
+                    stale.append(name)
+        except FileNotFoundError:
+            stale.append(name)
+    else:
+        with open(out, "w", encoding="utf-8") as fh:
+            fh.write(text)
+if stale:
+    sys.exit(f"schema/{', '.join(stale)} out of date; run tools/gen_schema.py")

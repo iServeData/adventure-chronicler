@@ -16,6 +16,8 @@ recording. After a long gap the session is paused until you resume it.
 | --- | --- |
 | Zones, instance entry and exit | On |
 | Boss encounter start, end and result | On |
+| Quests you accept, with their objectives and short objective summary; objective progress; the quests already in your log when you press Start | On |
+| The quest giver's full quest text | **Off** (`/ac set questtext on`). Left out of exports unless it's on when you export |
 | Quest reward window, reward chosen, quest turned in, reward items that appear in your bags | On |
 | Battleground entry, result and exit, and your own deaths | On (`/ac set pvp off`) |
 | Items shown in your own loot window | **Off** (`/ac set loot on`) |

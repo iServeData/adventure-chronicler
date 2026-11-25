@@ -1,6 +1,15 @@
--- Adventure Chronicler: quest turn-ins and rewards.
+-- Adventure Chronicler: quests accepted, objective progress, turn-ins and rewards.
 --
--- Three separate facts, never merged into a guess:
+-- Quest log facts (schema version 2), as the game's quest log showed them:
+--   quest.accepted  (confirmed) the game reported the quest was accepted; title, objectives and the
+--                               short objective summary. The quest giver's full text only with
+--                               /ac set questtext on.
+--   quest.progress  (confirmed) an objective's count changed (for example 3/8 -> 4/8). Changes in a
+--                               row for the same objective are merged into one entry with the last count.
+--   quest.snapshot  (seen)      at Start, quests already in the log, marked "already in progress".
+-- Progress is what the quest log said, not proof of who did the work or that it was finished.
+--
+-- Turn-in facts, never merged into a guess:
 --   quest.rewards_offered  (seen)      the reward panel showed these items
 --   quest.reward_selected  (inferred)  the player clicked "Complete Quest" with this choice
 --   quest.turned_in        (confirmed) the game reported the turn-in
@@ -11,12 +20,12 @@ ns = ns or {}
 ns.capture = ns.capture or {}
 local util = ns.util
 
-local Q = { pending = {}, current = nil, awaitingBags = {} }
+local Q = { pending = {}, current = nil, awaitingBags = {}, baseline = nil, busy = false }
 ns.capture.quests = Q
 
 Q.RECEIPT_WINDOW = 10 -- seconds after turn-in to look for bag changes
 
-function Q.reset() Q.pending, Q.current, Q.awaitingBags = {}, nil, {} end
+function Q.reset() Q.pending, Q.current, Q.awaitingBags, Q.baseline, Q.busy = {}, nil, {}, nil, false end
 
 local function itemCount(api, itemID)
   local f = (api.C_Item and api.C_Item.GetItemCount) or api.GetItemCount
@@ -42,6 +51,169 @@ local function readItems(api, kind, count)
   end
   return list
 end
+
+-- ------------------------------------------------------------------ quest log
+
+local function L() return ns.limits end
+
+local function clean(text, max)
+  if type(text) ~= "string" then return nil, false end
+  text = util.cleanText(text)
+  if text == "" then return nil, false end
+  return util.utf8cut(text, max)
+end
+
+-- "Fixture Wolf slain: 3/8" -> 3, 8 (the last a/b in the text).
+local function parseCount(text)
+  local a, b
+  for x, y in (text or ""):gmatch("(%d+)%s*/%s*(%d+)") do a, b = tonumber(x), tonumber(y) end
+  return a, b
+end
+
+local function readObjectives(api, index, questID)
+  local out = {}
+  local max = L().max_objectives
+  local list
+  if questID and api.C_QuestLog and api.C_QuestLog.GetQuestObjectives then
+    local ok, r = pcall(api.C_QuestLog.GetQuestObjectives, questID)
+    if ok and type(r) == "table" and #r > 0 then list = r end
+  end
+  if list then
+    for j, o in ipairs(list) do
+      if j > max then break end
+      local text = clean(o.text, 200)
+      local a, b = parseCount(text)
+      out[#out + 1] = { index = j, text = text, type = o.type, finished = o.finished == true,
+                        fulfilled = o.numFulfilled or a, required = o.numRequired or b }
+    end
+  elseif index and api.GetNumQuestLeaderBoards and api.GetQuestLogLeaderBoard then
+    local n = api.GetNumQuestLeaderBoards(index) or 0
+    for j = 1, math.min(n, max) do
+      local text, kind, finished = api.GetQuestLogLeaderBoard(j, index)
+      text = clean(text, 200)
+      local a, b = parseCount(text)
+      out[#out + 1] = { index = j, text = text, type = kind, finished = finished == true or finished == 1,
+                        fulfilled = a, required = b }
+    end
+  end
+  return out
+end
+
+-- Every quest the log lists (quests under collapsed headers can't be read this way).
+local function readLog(api)
+  local out, order = {}, {}
+  if not api.GetNumQuestLogEntries or not api.GetQuestLogTitle then return out, order end
+  local n = api.GetNumQuestLogEntries() or 0
+  for i = 1, n do
+    local title, level, _, isHeader, _, isComplete, _, questID = api.GetQuestLogTitle(i)
+    if title and not isHeader and questID and questID > 0 then
+      out[questID] = { index = i, quest_id = questID, title = clean(title, 200), level = level,
+                       complete = isComplete == 1 or isComplete == true,
+                       objectives = readObjectives(api, i, questID) }
+      order[#order + 1] = questID
+    end
+  end
+  return out, order
+end
+
+-- The short objective summary and (only when allowed) the full quest text. Selecting a quest log
+-- entry is how the game exposes this; the player's own selection is put back straight away.
+local function readText(api, index, wantFull)
+  if not (api.SelectQuestLogEntry and api.GetQuestLogQuestText) then return {} end
+  local prev = api.GetQuestLogSelection and api.GetQuestLogSelection() or nil
+  Q.busy = true
+  local ok, desc, summary = pcall(function()
+    api.SelectQuestLogEntry(index)
+    return api.GetQuestLogQuestText()
+  end)
+  if prev then pcall(api.SelectQuestLogEntry, prev) end
+  Q.busy = false
+  if not ok then return {} end
+  local r = {}
+  local cut1, cut2
+  r.summary, cut1 = clean(summary, L().max_quest_summary_chars)
+  if wantFull then r.description, cut2 = clean(desc, L().max_quest_text_chars) end
+  if cut1 or cut2 then r.text_cut = true end
+  return r
+end
+
+local function baselineFrom(log)
+  local b = {}
+  for id, q in pairs(log) do
+    local objs = {}
+    for _, o in ipairs(q.objectives) do
+      objs[o.index] = { fulfilled = o.fulfilled, finished = o.finished, text = o.text }
+    end
+    b[id] = { title = q.title, objectives = objs }
+  end
+  return b
+end
+
+-- QUEST_ACCEPTED(questLogIndex, questID) on Classic clients, QUEST_ACCEPTED(questID) on others.
+function Q.onAccepted(ctx, a, b)
+  local api = ctx.api
+  local questID = b or a
+  if type(questID) ~= "number" or questID <= 0 then return end
+  local log = readLog(api)
+  local q = log[questID]
+  local data = { quest_id = questID }
+  if q then
+    data.title, data.level, data.objectives = q.title, q.level, q.objectives
+    local t = readText(api, q.index, ctx.settings.record_quest_text == true)
+    data.summary, data.description, data.text_cut = t.summary, t.description, t.text_cut
+  elseif api.C_QuestLog and api.C_QuestLog.GetTitleForQuestID then
+    data.title = clean(api.C_QuestLog.GetTitleForQuestID(questID), 200)
+  end
+  ctx.record({ type = "quest.accepted", certainty = "confirmed", key = "accept:" .. questID, data = data })
+  Q.baseline = Q.baseline or {}
+  if q then Q.baseline[questID] = baselineFrom({ [questID] = q })[questID] end
+end
+
+-- QUEST_LOG_UPDATE: compare objective counts with the last reading. The first reading only sets
+-- the baseline; an objective seen for the first time is not counted as progress.
+function Q.onLogUpdate(ctx)
+  if Q.busy then return end
+  local log = readLog(ctx.api)
+  local old = Q.baseline
+  Q.baseline = baselineFrom(log)
+  if not old then return end
+  for id, q in pairs(log) do
+    local was = old[id]
+    if was then
+      for _, o in ipairs(q.objectives) do
+        local w = was.objectives[o.index]
+        if w and (w.fulfilled ~= o.fulfilled or w.finished ~= o.finished) then
+          local key = "progress:" .. id .. ":" .. o.index
+          local data = { quest_id = id, title = q.title, index = o.index, text = o.text,
+                         fulfilled = o.fulfilled, required = o.required, finished = o.finished }
+          if not (ctx.amend and ctx.amend(key, data)) then
+            ctx.record({ type = "quest.progress", certainty = "confirmed", key = key, data = data })
+          end
+        end
+      end
+    end
+  end
+end
+
+-- At Start: one list of the quests already in the log. "Already in progress" means only that they
+-- were in the log; nothing about how they got there.
+function Q.snapshot(ctx)
+  local log, order = readLog(ctx.api)
+  Q.baseline = baselineFrom(log)
+  if #order == 0 then return end
+  local quests = {}
+  local max = L().max_snapshot_quests
+  for _, id in ipairs(order) do
+    if #quests >= max then break end
+    local q = log[id]
+    quests[#quests + 1] = { quest_id = id, title = q.title, level = q.level, complete = q.complete,
+                            objectives = q.objectives }
+  end
+  ctx.record({ type = "quest.snapshot", certainty = "seen",
+               data = { quests = quests, listed = #order, kept = #quests } })
+end
+
+-- ------------------------------------------------------------------ turn-ins
 
 -- QUEST_COMPLETE: the reward panel is open.
 function Q.onComplete(ctx)
@@ -99,6 +271,7 @@ function Q.onTurnedIn(ctx, questID, xp, money)
   if not title and api.C_QuestLog and api.C_QuestLog.GetTitleForQuestID then
     title = api.C_QuestLog.GetTitleForQuestID(questID)
   end
+  if Q.baseline then Q.baseline[questID] = nil end
   ctx.record({ type = "quest.turned_in", certainty = "confirmed", key = "turnin:" .. questID,
                data = { quest_id = questID, title = title, xp = xp, money_copper = money } })
   if p and p.watch and #p.watch > 0 then
@@ -135,6 +308,8 @@ function Q.onFinished()
 end
 
 Q.events = {
+  QUEST_ACCEPTED = function(ctx, ...) Q.onAccepted(ctx, ...) end,
+  QUEST_LOG_UPDATE = function(ctx) Q.onLogUpdate(ctx) end,
   QUEST_COMPLETE = function(ctx) Q.onComplete(ctx) end,
   QUEST_TURNED_IN = function(ctx, ...) Q.onTurnedIn(ctx, ...) end,
   QUEST_FINISHED = function(ctx) Q.onFinished(ctx) end,

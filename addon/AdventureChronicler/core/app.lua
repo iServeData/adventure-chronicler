@@ -7,11 +7,12 @@ local L = ns.limits
 local App = { loaded = false, warnedFull = false }
 ns.App = App
 
-App.VERSION = "0.2.6"
+App.VERSION = "0.3.0"
 App.DEFAULT_SETTINGS = {
   prompt_on_instance = false,   -- ask (never auto-start) when entering a dungeon or raid
   record_pvp = true,            -- battleground entry/exit/result and own deaths
   record_personal_loot = false, -- opt-in
+  record_quest_text = false,    -- opt-in: the quest giver's full text (objectives are always kept)
   include_identity = false,     -- opt-in: character name and realm in exports
   include_class_level = true,   -- class and level in exports (not identifying on their own)
   show_indicator = true,        -- the recording indicator is always shown while recording or paused
@@ -132,6 +133,7 @@ App.ctx = {
   api = api,
   now = function() return App.now() end,
   record = function(obs, opts) return App.record(obs, opts) end,
+  amend = function(key, data) return S.amendLast(App.db, App.now(), key, data) end,
   settings = setmetatable({}, { __index = function(_, k) return App.settings and App.settings[k] end }),
   onInstanceEnter = function(inst) App.onInstanceEnter(inst) end,
   notify = function(msg) App.print(msg) end,
@@ -170,6 +172,7 @@ function App.start(title)
   App.warnedFull = false
   -- Record where the session begins.
   if ns.capture.zones then ns.capture.zones.reset(); ns.capture.zones.check(App.ctx) end
+  if ns.capture.quests then pcall(ns.capture.quests.snapshot, App.ctx) end
   App.print("Recording started. /ac pause, /ac note, /ac mark, /ac stop.")
   App.refresh()
 end

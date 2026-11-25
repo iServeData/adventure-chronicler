@@ -20,6 +20,19 @@ local WORDS = {
     local r = { success = "defeated", wipe_or_reset = "not defeated (wipe or reset)" }
     return "Encounter ended: " .. (d.name or "unknown") .. ", " .. (r[d.result] or "result unknown")
   end,
+  ["quest.accepted"] = function(d)
+    local n = d.objectives and #d.objectives or 0
+    return "Accepted " .. q(d) .. (n > 0 and (" (" .. n .. (n == 1 and " objective)" or " objectives)")) or "")
+  end,
+  ["quest.progress"] = function(d)
+    local what = d.text or ("objective " .. tostring(d.index or "?"))
+    if not d.text and d.fulfilled and d.required then what = what .. ": " .. d.fulfilled .. "/" .. d.required end
+    return "Progress on " .. q(d) .. ": " .. what .. (d.finished and " (done)" or "")
+  end,
+  ["quest.snapshot"] = function(d)
+    local n = d.listed or (d.quests and #d.quests) or 0
+    return "Quest log at start: " .. n .. (n == 1 and " quest" or " quests") .. " already in progress"
+  end,
   ["quest.rewards_offered"] = function(d)
     local n = d.choices and #d.choices or 0
     return "Reward window opened for " .. q(d) .. (n > 0 and (" (" .. n .. " choices shown)") or "")
@@ -67,6 +80,7 @@ D.ICON = ICON
 local FAMILY = {
   ["zone.enter"] = "zone", ["instance.enter"] = "instance", ["instance.leave"] = "instance",
   ["encounter.start"] = "encounter", ["encounter.end"] = "encounter",
+  ["quest.accepted"] = "quest", ["quest.progress"] = "quest", ["quest.snapshot"] = "quest",
   ["quest.rewards_offered"] = "quest", ["quest.reward_selected"] = "quest", ["quest.turned_in"] = "quest",
   ["item.received"] = "item", ["loot.seen"] = "item",
   ["pvp.battleground_enter"] = "pvp", ["pvp.battleground_leave"] = "pvp", ["pvp.battleground_result"] = "pvp",

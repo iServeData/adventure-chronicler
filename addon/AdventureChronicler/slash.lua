@@ -22,6 +22,7 @@ local HELP = {
 local SETTABLE = {
   prompt = "prompt_on_instance", pvp = "record_pvp", loot = "record_personal_loot",
   identity = "include_identity", classlevel = "include_class_level", buttons = "indicator_buttons",
+  questtext = "record_quest_text",
 }
 
 local function options(App)
@@ -53,7 +54,7 @@ function ns.handleSlash(msg)
     local name, val = rest:match("^(%S+)%s+(%S+)$")
     local key = name and SETTABLE[name:lower()]
     if not key or (val ~= "on" and val ~= "off") then App.print("Usage: /ac set <" ..
-      "prompt|pvp|loot|identity|classlevel|buttons> on|off") return end
+      "prompt|pvp|loot|identity|classlevel|buttons|questtext> on|off") return end
     App.settings[key] = (val == "on")
     App.print(name .. " is now " .. val .. ".")
     App.refresh()

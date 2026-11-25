@@ -8,6 +8,28 @@
 #                       text = one or two sentences
 
 [[release]]
+version = "0.3.0"
+date = "2026-11-24"
+title = "Quest objectives and progress"
+status = "prototype"
+[[release.change]]
+area = "Recorder"
+kind = "new"
+text = "Accepting a quest records its title, objectives (for example \"Fixture Wolf slain: 0/8\") and short objective summary. Objective progress is recorded as it changes; changes in a row for the same objective become one entry with the last count."
+[[release.change]]
+area = "Recorder"
+kind = "new"
+text = "Pressing Start lists the quests already in your log, marked \"already in progress\"."
+[[release.change]]
+area = "Settings"
+kind = "new"
+text = "`/ac set questtext on` also keeps the quest giver's full text. It's off by default and left out of exports unless it's on when you export."
+[[release.change]]
+area = "Export"
+kind = "improved"
+text = "Exports use schema version 2, which adds the quest log entries. Readers that know version 2 still accept version 1 files."
+
+[[release]]
 version = "0.2.6"
 date = "2026-11-24"
 title = "Quick buttons on the recording indicator"

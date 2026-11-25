@@ -17,6 +17,7 @@ import ac_scaffold  # noqa: E402
 import ac_validate as v  # noqa: E402
 
 FIXTURE = os.path.join(ROOT, "tests", "fixtures", "valid_session.acx.txt")
+FIXTURE_V1 = os.path.join(ROOT, "tests", "fixtures", "valid_session_v1.acx.txt")
 
 
 def load_fixture():
@@ -135,7 +136,64 @@ class Schema(unittest.TestCase):
         self.check_bad(m, "repeated")
 
     def test_schema_version(self):
-        self.check_bad(lambda d: d.update(schema_version=2), "schema version 1")
+        self.check_bad(lambda d: d.update(schema_version=3), "schema versions 1 and 2")
+        self.check_bad(lambda d: d.update(schema_version=True), "schema versions 1 and 2")
+
+
+def obs_of(d, kind):
+    return next(o for o in d["observations"] if o["type"] == kind)
+
+
+class SchemaV2(unittest.TestCase):
+    check_bad = Schema.check_bad
+
+    def test_version_1_file_still_valid(self):
+        with open(FIXTURE_V1, "rb") as fh:
+            d, _ = v.validate(fh.read())
+        self.assertEqual(1, d["schema_version"])
+
+    def test_version_1_rejects_quest_log_types(self):
+        def m(d):
+            d["schema_version"] = 1
+            del d["consent"]["quest_text"]
+        self.check_bad(m, "known observation type")
+
+    def test_version_2_requires_quest_text_consent_flag(self):
+        self.check_bad(lambda d: d["consent"].pop("quest_text"), "missing: quest_text")
+
+    def test_full_quest_text_needs_consent(self):
+        self.check_bad(lambda d: obs_of(d, "quest.accepted")["data"].update(description="Long text."),
+                       "without consent")
+
+        d = doc()
+        d["consent"]["quest_text"] = True
+        obs_of(d, "quest.accepted")["data"].update(description="Long text.", text_cut=True)
+        v.validate(rewrap(d))
+
+    def test_objective_fields_checked(self):
+        self.check_bad(lambda d: obs_of(d, "quest.accepted")["data"]["objectives"][0].update(done=True),
+                       "unknown field")
+        self.check_bad(lambda d: obs_of(d, "quest.progress")["data"].update(fulfilled=-1), "out of range")
+        self.check_bad(lambda d: obs_of(d, "quest.accepted")["data"].update(summary="x" * 1001), "longer than")
+
+    def test_snapshot(self):
+        d = doc()
+        d["observations"].append({"seq": 99, "t": d["observations"][-1]["t"], "type": "quest.snapshot",
+                                  "certainty": "seen", "repeats": 0, "clock_note": None,
+                                  "data": {"listed": 1, "kept": 1, "quests": [
+                                      {"quest_id": 7, "title": "Fixture Errand", "complete": False,
+                                       "objectives": [{"index": 1, "text": "Fixture Crate: 1/3",
+                                                       "fulfilled": 1, "required": 3, "finished": False}]}]}})
+        v.validate(rewrap(d))
+        d["observations"][-1]["data"]["quests"][0]["cleared"] = True
+        with self.assertRaisesRegex(v.ValidationError, "unknown field"):
+            v.validate(rewrap(d))
+
+    def test_scaffold_labels_progress_as_recorded(self):
+        sc = ac_scaffold.scaffold(doc())
+        self.assertIn("Fixture Wolf slain: 8/8 (done)", sc["happened"])
+        self.assertIn("as recorded", sc["happened"])
+        self.assertEqual("unknown", sc["outcome"])
 
 
 class Duplicates(unittest.TestCase):
@@ -165,7 +223,7 @@ class Scaffold(unittest.TestCase):
 
     def test_one_boss_kill_is_not_a_clear(self):
         d = doc()
-        d["observations"].append({"seq": 3, "t": 1800000150, "type": "encounter.end", "certainty": "confirmed",
+        d["observations"].append({"seq": 30, "t": 1800000150, "type": "encounter.end", "certainty": "confirmed",
                                   "clock_note": None, "repeats": 0,
                                   "data": {"encounter_id": 1, "name": "Test Boss", "result": "success"}})
         dd, _ = v.validate(rewrap(d))
