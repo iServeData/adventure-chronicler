@@ -2,6 +2,13 @@
 
 Built from `changelog.toml` by `tools/build_changelog.py`; edit that file, not this one.
 
+## 0.3.1 · 2026-11-24 · Smaller indicator and a minimap button (prototype, unreleased)
+
+- **New** (Recorder): The REC indicator has an x button that shrinks it to a small tab with a red (recording) or gold (paused) dot and the time. Click the tab to bring the full window back; the choice is remembered.
+- **New** (Recorder): A compass button at the start of the indicator's row (and on the small tab) opens the recorder, so you don't have to type /ac.
+- **New** (Windows): A compass button on the minimap opens the recorder at any time, shows a red or gold dot while a session is open, and can be dragged around the minimap. /ac set minimap off hides it.
+- **New** (Settings): /ac set indicator hide hides the REC indicator completely (off by default). Chat then reminds you when recording starts, resumes or continues after login; /ac set indicator show brings it back.
+
 ## 0.3.0 · 2026-11-24 · Quest objectives and progress (prototype, unreleased)
 
 - **New** (Recorder): Accepting a quest records its title, objectives (for example "Fixture Wolf slain: 0/8") and short objective summary. Objective progress is recorded as it changes; changes in a row for the same objective become one entry with the last count.

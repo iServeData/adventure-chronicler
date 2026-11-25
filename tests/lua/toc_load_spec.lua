@@ -36,8 +36,14 @@ local function withGame(fn)
     GetBuildInfo = function() return "1.60.1", "00000", "", 16001 end, GetLocale = function() return "enUS" end,
     UnitClass = function() return "Hunter", "HUNTER" end, UnitName = function() return "Examplechar" end,
     UnitLevel = function() return 24 end, GetRealmName = function() return "Example Realm" end,
+    GetCursorPosition = function() return 100, 300 end,
     time = function() return 1800000000 end, date = os.date, tinsert = table.insert,
   }
+  local mm = stubObject()
+  mm.GetWidth = function() return 140 end
+  mm.GetCenter = function() return 100, 200 end
+  mm.GetEffectiveScale = function() return 1 end
+  G.Minimap = mm
   for k, v in pairs(G) do saved[k] = rawget(_G, k); _G[k] = v end
   local ok, err = pcall(fn, events, printed)
   for k in pairs(G) do _G[k] = saved[k] end
@@ -76,7 +82,43 @@ describe("addon load (stubbed)", function()
       assert.is_false(_G.AdventureChroniclerDB.settings.indicator_buttons)
       slash("set buttons on")
       assert.is_true(_G.AdventureChroniclerDB.settings.indicator_buttons)
+      -- Minimize to the small tab and back (remembered in settings).
+      local settings0 = _G.AdventureChroniclerDB.settings
+      local full, _, btns = ns.ui.indicator.frames()
+      assert.is_true(full:IsShown())
+      rawget(btns.minimize, "_OnClick")(btns.minimize)
+      local _, tab = ns.ui.indicator.frames()
+      assert.is_true(settings0.indicator_minimized)
+      assert.is_false(full:IsShown()); assert.is_true(tab:IsShown())
+      rawget(tab, "_OnClick")(tab)
+      assert.is_false(settings0.indicator_minimized)
+      assert.is_true(full:IsShown()); assert.is_false(tab:IsShown())
+      -- Hiding the indicator completely: nothing on screen, so chat reminds you on resume.
+      slash("set indicator hide")
+      assert.is_false(settings0.show_indicator)
+      assert.is_false(full:IsShown()); assert.is_false(tab:IsShown())
+      local before = #printed
+      slash("pause"); slash("resume")
+      local reminded = false
+      for i = before + 1, #printed do
+        if printed[i]:find("Adventure Chronicler is recording, /ac to open", 1, true) then reminded = true end
+      end
+      assert.is_true(reminded)
+      slash("set indicator show")
+      assert.is_true(settings0.show_indicator); assert.is_true(full:IsShown())
+      -- The minimap button: shown with a dot while recording, draggable, and can be turned off.
+      local mb, dot = ns.ui.minimap.frame()
+      assert.is_true(mb:IsShown()); assert.is_true(dot:IsShown())
+      rawget(mb, "_OnDragStart")(mb)
+      rawget(mb, "_OnUpdate")(mb)  -- cursor is straight above the centre
+      assert.equal(90, settings0.minimap_angle)
+      rawget(mb, "_OnDragStop")(mb)
+      slash("set minimap off")
+      assert.is_false(settings0.minimap_button); assert.is_false(mb:IsShown())
+      slash("set minimap on")
+      assert.is_true(mb:IsShown())
       slash("stop")
+      assert.is_false(dot:IsShown())
       local db = _G.AdventureChroniclerCharDB
       local s = db.sessions[db.order[1]]
       assert.equal("stopped", s.state); assert.equal(2, #s.notes)

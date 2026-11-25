@@ -16,14 +16,18 @@ local HELP = {
   "/ac export  copy the latest session (import code, Markdown, text or JSON)",
   "/ac link <https://...>  set the QuestersBoard address (/ac link clear goes back to the default)",
   "/ac options  show settings;  /ac set <setting> on|off",
+  "/ac set indicator hide|show  hide the recording window (chat reminds you); /ac set minimap off|on",
   "/ac version",
 }
 
 local SETTABLE = {
   prompt = "prompt_on_instance", pvp = "record_pvp", loot = "record_personal_loot",
   identity = "include_identity", classlevel = "include_class_level", buttons = "indicator_buttons",
-  questtext = "record_quest_text",
+  questtext = "record_quest_text", indicator = "show_indicator", minimap = "minimap_button",
 }
+
+-- on/off for every setting; show/hide too (they read better for the indicator and minimap button).
+local VALUES = { on = true, off = false, show = true, hide = false }
 
 local function options(App)
   for short, key in pairs(SETTABLE) do
@@ -52,11 +56,16 @@ function ns.handleSlash(msg)
   elseif cmd == "options" then options(App)
   elseif cmd == "set" then
     local name, val = rest:match("^(%S+)%s+(%S+)$")
-    local key = name and SETTABLE[name:lower()]
-    if not key or (val ~= "on" and val ~= "off") then App.print("Usage: /ac set <" ..
-      "prompt|pvp|loot|identity|classlevel|buttons|questtext> on|off") return end
-    App.settings[key] = (val == "on")
-    App.print(name .. " is now " .. val .. ".")
+    name, val = name and name:lower(), val and val:lower()
+    local key = name and SETTABLE[name]
+    if not key or VALUES[val] == nil then App.print("Usage: /ac set <" ..
+      "prompt|pvp|loot|identity|classlevel|buttons|questtext|indicator|minimap> on|off") return end
+    App.settings[key] = VALUES[val]
+    App.print(name .. " is now " .. (VALUES[val] and "on" or "off") .. ".")
+    if key == "show_indicator" and not VALUES[val] then
+      App.print("The recording window stays hidden. While a session is open you'll get a reminder in chat. "
+        .. "/ac set indicator show brings it back.")
+    end
     App.refresh()
   elseif cmd == "version" then App.print("version " .. App.VERSION)
   elseif cmd == "help" then for _, line in ipairs(HELP) do App.print(line) end

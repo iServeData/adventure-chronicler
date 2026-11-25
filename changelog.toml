@@ -8,6 +8,32 @@
 #                       text = one or two sentences
 
 [[release]]
+version = "0.3.1"
+date = "2026-11-24"
+title = "Smaller indicator and a minimap button"
+status = "prototype"
+
+[[release.change]]
+area = "Recorder"
+kind = "new"
+text = "The REC indicator has an x button that shrinks it to a small tab with a red (recording) or gold (paused) dot and the time. Click the tab to bring the full window back; the choice is remembered."
+
+[[release.change]]
+area = "Recorder"
+kind = "new"
+text = "A compass button at the start of the indicator's row (and on the small tab) opens the recorder, so you don't have to type /ac."
+
+[[release.change]]
+area = "Windows"
+kind = "new"
+text = "A compass button on the minimap opens the recorder at any time, shows a red or gold dot while a session is open, and can be dragged around the minimap. /ac set minimap off hides it."
+
+[[release.change]]
+area = "Settings"
+kind = "new"
+text = "/ac set indicator hide hides the REC indicator completely (off by default). Chat then reminds you when recording starts, resumes or continues after login; /ac set indicator show brings it back."
+
+[[release]]
 version = "0.3.0"
 date = "2026-11-24"
 title = "Quest objectives and progress"

@@ -10,7 +10,7 @@ files["addon"] = {
     "SLASH_ADVENTURECHRONICLER1", "SLASH_ADVENTURECHRONICLER2", "SlashCmdList", "StaticPopupDialogs",
   },
   read_globals = {
-    "CreateFrame", "UIParent", "UISpecialFrames", "GameTooltip", "ChatFontNormal", "DEFAULT_CHAT_FRAME",
+    "CreateFrame", "UIParent", "UISpecialFrames", "GameTooltip", "Minimap", "GetCursorPosition", "ChatFontNormal", "DEFAULT_CHAT_FRAME",
     "StaticPopup_Show", "hooksecurefunc", "C_Timer", "C_CVar", "C_Map", "C_Item", "C_QuestLog",
     "InCombatLockdown", "Screenshot", "GetBuildInfo", "GetLocale", "UnitClass", "UnitName", "UnitLevel",
     "GetRealmName", "GetInstanceInfo", "GetRealZoneText", "date", "time", "tinsert", "bit",

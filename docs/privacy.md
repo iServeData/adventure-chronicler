@@ -7,7 +7,9 @@ paste it somewhere yourself.
 ## When it records
 
 Only between `/ac start` and `/ac stop`, and only while not paused. A REC / PAUSED indicator is shown the
-whole time. If the game closes or crashes, the next login records a gap and doesn't pretend you were
+whole time, either full size or as a small tab with a red or gold dot. You can choose to hide it completely
+with `/ac set indicator hide` (off by default); then chat says "Adventure Chronicler is recording" when a
+session starts, resumes or continues after login, and the minimap button shows the dot. If the game closes or crashes, the next login records a gap and doesn't pretend you were
 recording. After a long gap the session is paused until you resume it.
 
 ## What it records
