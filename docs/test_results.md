@@ -32,3 +32,12 @@ Not yet run: 4 to 9, 15 to 19 and 21 to 24, and every item on Mac.
 | 20 | Passed (while still recording): the second export passes the reference validator. The first pasted copy had one stray letter, and the validator rejects it as changed, as intended |
 
 Found and fixed in this run: the flight path start logged "Arrived in Desolace" twice, and the export window let review rows show through.
+
+## Run 3: 0.1.1 (before the flight path fix), Windows, WoW Forever 1.60.1, 2026-11-24
+
+| # | Result |
+| --- | --- |
+| 4 | Passed: a quest with no reward choice gave "Reward window opened" with no choices, then "Turned in", and no chosen or received item |
+| 20 | Passed: the export passes the reference validator |
+
+Seen again: taking the zeppelin from Durotar logged a second Durotar arrival when the map changed to the other continent. This build came before the fix; recheck on 0.2.0.
