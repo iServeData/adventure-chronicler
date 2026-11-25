@@ -33,7 +33,7 @@ or a Markdown, text or HTML file.
 | `/ac pause` / `/ac resume` | Pause or continue recording |
 | `/ac note [text]` | Add a note. With no text, it opens the editor. |
 | `/ac mark [label]` | Add a bookmark |
-| `/ac title <name>` | Rename the session that is open (or click the title in the recorder) |
+| `/ac title <name>` | Rename the session that is open (or click the title in the recorder). Any session, stopped too, can be renamed from its title in `/ac review` |
 | `/ac shot` / `/ac shot clean` | Take a screenshot as seen, or a clean scene (outside combat) |
 | `/ac stop` | End the session |
 | `/ac review` | Review, edit or delete sessions, notes and events |

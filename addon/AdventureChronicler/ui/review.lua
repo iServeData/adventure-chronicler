@@ -8,7 +8,7 @@ local R = { selected = nil, page = 1 }
 ns.ui.review = R
 
 local PAGE = 60
-local f, list, listChild, timeline, timelineChild, header, pageLabel
+local f, list, listChild, timeline, timelineChild, header, pageLabel, titleBox, titleInput, renameLink
 local sessionRows, lineRows = {}, {}
 
 local function W() return ns.ui.widgets end
@@ -42,8 +42,49 @@ local function build()
 
   header = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
   header:SetPoint("TOPLEFT", 262, -42)
-  header:SetPoint("RIGHT", -16, 0)
+  header:SetPoint("RIGHT", -96, 0)
   header:SetJustifyH("LEFT")
+  header:SetWordWrap(false)
+
+  -- Rename: click the title (or Rename), type, Enter saves, Escape keeps the old name. Works on any
+  -- session, stopped or not. Only the title changes; observations and notes stay as they are.
+  titleBox = W().parchment(f)
+  titleBox:SetPoint("TOPLEFT", 258, -36)
+  titleBox:SetPoint("TOPRIGHT", -92, -36)
+  titleBox:SetHeight(26)
+  titleBox:Hide()
+  titleInput = CreateFrame("EditBox", nil, titleBox)
+  titleInput:SetAutoFocus(false)
+  titleInput:SetHeight(22)
+  titleInput:SetPoint("LEFT", 8, 0)
+  titleInput:SetPoint("RIGHT", -8, 0)
+  titleInput:SetFontObject(ChatFontNormal)
+  titleInput:SetTextColor(W().INK[1], W().INK[2], W().INK[3])
+  titleInput:SetMaxLetters(ns.limits.max_title_chars)
+  local function endRename() titleBox:Hide(); header:Show(); renameLink:Show() end
+  titleInput:SetScript("OnEnterPressed", function(self)
+    local id, text = R.selected, self:GetText()
+    self:ClearFocus(); endRename()
+    if id then ns.App.rename(text, id) end
+  end)
+  titleInput:SetScript("OnEscapePressed", function(self) self:ClearFocus(); endRename() end)
+  titleInput:SetScript("OnEditFocusLost", function() endRename() end)
+  local function startRename()
+    local s = R.selected and ns.App.db.sessions[R.selected]
+    if not s then return end
+    header:Hide(); renameLink:Hide(); titleBox:Show()
+    titleInput:SetText(s.title or "")
+    titleInput:SetFocus()
+    titleInput:HighlightText()
+  end
+  R.startRename = startRename
+  local clickTitle = CreateFrame("Button", nil, f)
+  clickTitle:SetPoint("TOPLEFT", 258, -38)
+  clickTitle:SetPoint("TOPRIGHT", -96, -38)
+  clickTitle:SetHeight(22)
+  clickTitle:SetScript("OnClick", startRename)
+  renameLink = W().link(f, "Rename", startRename)
+  renameLink:SetPoint("TOPRIGHT", -44, -40)
 
   timeline = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
   timeline:SetPoint("TOPLEFT", 262, -64)

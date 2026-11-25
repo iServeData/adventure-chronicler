@@ -2,6 +2,8 @@
 
 ## 0.2.5 (prototype, unreleased)
 
+- Sessions can be renamed in the review window, including stopped ones: click the title or Rename, type, and
+  press Enter (Escape keeps the old name). Only the title changes.
 - The Open QuestersBoard button now has a default address, the placeholder `https://example.com/import`,
   so it works before you set your own. `/ac link https://...` still replaces it, and `/ac link clear` goes
   back to the default.

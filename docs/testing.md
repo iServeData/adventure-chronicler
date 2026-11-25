@@ -61,5 +61,6 @@ Setup: install as in [install.md](install.md). Turn on Lua errors with `/console
 | 32 | Copy the Markdown into a new `.md` file and open it | Title, details, timeline and your notes in full. No character name unless turned on |
 | 33 | Press Open QuestersBoard before setting an address | It shows `https://example.com/import`, selected |
 | 34 | `/ac link http://example.org`, then `/ac link https://example.org`, press the button, then `/ac link clear` | The http address is refused. The https one shows selected and Ctrl+C copies it. After clear, the default is back |
+| 35 | In `/ac review`, pick a stopped session, click its title (or Rename), type a new name and press Enter; then try Escape on another | The new name shows in the list and the header, and in a new export. Escape keeps the old name |
 
 Record the results in a copy of this table and add a summary to [test_results.md](test_results.md). Don't commit real exports or saved data.
