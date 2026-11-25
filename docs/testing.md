@@ -59,7 +59,7 @@ Setup: install as in [install.md](install.md). Turn on Lua errors with `/console
 | 30 | With an export window open, press Add note | The note window opens on top of the export window |
 | 31 | In the export window, click Markdown, Text, JSON, then Import code | Each shows its copy and a suggested file name; the chosen format is highlighted. Import code still validates |
 | 32 | Copy the Markdown into a new `.md` file and open it | Title, details, timeline and your notes in full. No character name unless turned on |
-| 33 | Press Open QuestersBoard before setting an address | It explains `/ac link https://...` |
-| 34 | `/ac link http://example.com`, then `/ac link https://example.com`, then press the button | The http address is refused. The https one shows selected; Ctrl+C copies it |
+| 33 | Press Open QuestersBoard before setting an address | It shows `https://example.com/import`, selected |
+| 34 | `/ac link http://example.org`, then `/ac link https://example.org`, press the button, then `/ac link clear` | The http address is refused. The https one shows selected and Ctrl+C copies it. After clear, the default is back |
 
 Record the results in a copy of this table and add a summary to [test_results.md](test_results.md). Don't commit real exports or saved data.

@@ -7,7 +7,7 @@ local L = ns.limits
 local App = { loaded = false, warnedFull = false }
 ns.App = App
 
-App.VERSION = "0.2.4"
+App.VERSION = "0.2.5"
 App.DEFAULT_SETTINGS = {
   prompt_on_instance = false,   -- ask (never auto-start) when entering a dungeon or raid
   record_pvp = true,            -- battleground entry/exit/result and own deaths
@@ -15,8 +15,12 @@ App.DEFAULT_SETTINGS = {
   include_identity = false,     -- opt-in: character name and realm in exports
   include_class_level = true,   -- class and level in exports (not identifying on their own)
   show_indicator = true,        -- the recording indicator is always shown while recording or paused
-  questersboard_url = "",       -- your community's QuestersBoard address, set with /ac link (https only)
+  questersboard_url = "",       -- your own QuestersBoard address, set with /ac link ("" = App.DEFAULT_LINK)
 }
+
+-- Where the export window's Open QuestersBoard button points until you set your own with /ac link.
+-- A placeholder: no real community address is shipped in the add-on.
+App.DEFAULT_LINK = "https://example.com/import"
 
 -- Accepts only a plain https:// address (no spaces, quotes or WoW escape codes), up to 200 characters.
 function App.validLink(url)
@@ -28,16 +32,20 @@ function App.validLink(url)
   return url
 end
 
+-- The address the button shows: yours if set and valid, otherwise the default.
+function App.link()
+  return App.validLink(App.settings and App.settings.questersboard_url) or App.validLink(App.DEFAULT_LINK)
+end
+
 function App.setLink(url)
   if url == nil or url == "" then
-    local cur = App.settings.questersboard_url
-    App.print(cur ~= "" and ("QuestersBoard address: " .. cur) or
-      "No QuestersBoard address set. Use /ac link https://your-questersboard-address")
+    local own = App.validLink(App.settings.questersboard_url)
+    App.print("QuestersBoard address: " .. (App.link() or "none") .. (own and "" or " (the default)"))
     return
   end
-  if url == "clear" or url == "off" then
+  if url == "clear" or url == "off" or url == "default" then
     App.settings.questersboard_url = ""
-    App.print("QuestersBoard address cleared.")
+    App.print("QuestersBoard address is back to the default: " .. (App.link() or "none"))
     return
   end
   local ok = App.validLink(url)

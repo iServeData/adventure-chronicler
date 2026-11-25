@@ -78,7 +78,7 @@ end
 
 local function openLink()
   if not linkWin then buildLink() end
-  local url = ns.App.validLink(ns.App.settings.questersboard_url)
+  local url = ns.App.link()
   if url then
     linkText = url
     linkInfo:SetText("WoW add-ons can't open a browser. Press Ctrl+C (Cmd+C on Mac) to copy this address,\n"

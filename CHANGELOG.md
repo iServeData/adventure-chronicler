@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.5 (prototype, unreleased)
+
+- The Open QuestersBoard button now has a default address, the placeholder `https://example.com/import`,
+  so it works before you set your own. `/ac link https://...` still replaces it, and `/ac link clear` goes
+  back to the default.
+
 ## 0.2.4 (prototype, unreleased)
 
 - The export window has a Format row: Import code (the checked code QuestersBoard reads, as before),

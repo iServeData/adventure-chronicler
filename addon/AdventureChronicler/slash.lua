@@ -14,7 +14,7 @@ local HELP = {
   "/ac stop  end the session",
   "/ac review  open the review window",
   "/ac export  copy the latest session (import code, Markdown, text or JSON)",
-  "/ac link <https://...>  set your QuestersBoard address (/ac link clear removes it)",
+  "/ac link <https://...>  set the QuestersBoard address (/ac link clear goes back to the default)",
   "/ac options  show settings;  /ac set <setting> on|off",
   "/ac version",
 }

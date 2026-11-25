@@ -83,16 +83,20 @@ describe("addon load (stubbed)", function()
       -- The QuestersBoard address: https only, saved in settings, cleared on request.
       local settings = _G.AdventureChroniclerDB.settings
       assert.equal("", settings.questersboard_url)
+      assert.equal("https://example.com/import", ns.App.link())  -- the shipped default
       slash("link http://example.com/import")
       assert.equal("", settings.questersboard_url)
-      slash("link https://example.com/import")
-      assert.equal("https://example.com/import", settings.questersboard_url)
+      slash("link https://example.org/board/import")
+      assert.equal("https://example.org/board/import", settings.questersboard_url)
+      assert.equal("https://example.org/board/import", ns.App.link())
       slash("export")  -- the window opens with the address set
       for _, k in ipairs({ "markdown", "text", "json", "code" }) do ns.ui.export.setKind(k) end
       ns.ui.export.openLink()
       slash("link clear")
       assert.equal("", settings.questersboard_url)
-      ns.ui.export.openLink()  -- explains /ac link when no address is set
+      assert.equal("https://example.com/import", ns.App.link())
+      ns.App.DEFAULT_LINK = ""
+      ns.ui.export.openLink()  -- explains /ac link when there's no address at all
     end)
   end)
 end)

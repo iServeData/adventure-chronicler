@@ -68,6 +68,12 @@ Found in this run, all fixed in 0.2.2:
 - Right after a `/reload` the map was briefly the whole continent, which logged "Arrived in Eastern Kingdoms" between two Stranglethorn Vale arrivals.
 - One death was logged twice, a second apart.
 
+## Run 7: 0.2.4, Windows, WoW Forever 1.60.1, 2026-11-24
+
+| # | Result |
+| --- | --- |
+| 31 | Partial (image): the export window shows the Format row with Import code highlighted, the hint and the suggested file name `adventure_2026-11-24_untitled_import_code.txt`. Markdown, Text and JSON weren't shown |
+
 ## Run 6: 0.2.2, Windows, WoW Forever 1.60.1, 2026-11-24
 
 | # | Result |

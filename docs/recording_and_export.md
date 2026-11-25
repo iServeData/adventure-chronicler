@@ -77,5 +77,6 @@ export.
 ### QuestersBoard button
 
 WoW doesn't let add-ons open a browser either. Open QuestersBoard shows your community's address, selected,
-so Ctrl+C copies it for your browser. Set the address once with `/ac link https://...`; only `https://`
-addresses are accepted, and `/ac link clear` removes it. The add-on ships with no address.
+so Ctrl+C copies it for your browser. It starts as the placeholder `https://example.com/import`. Set your
+own with `/ac link https://...` (only `https://` addresses are accepted); `/ac link clear` goes back to the
+default. No real community address ships with the add-on.
