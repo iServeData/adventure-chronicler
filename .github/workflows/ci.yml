@@ -38,6 +38,7 @@ jobs:
           python-version: "3.12"
       - run: python -m unittest discover -s reference/tests -v
       - run: python tools/gen_schema.py --check
+      - run: python tools/build_changelog.py --check
 
   hygiene:
     runs-on: ubuntu-24.04

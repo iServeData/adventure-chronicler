@@ -8,7 +8,7 @@ Every step that needs approval stops until it's given.
    the full history is clean.
 4. The diff from `main` has been reviewed by a person. There are no real IDs, names, domains, hosts or
    exports in it.
-5. CHANGELOG and the version are updated in the `.toc` file.
+5. The change is added to `changelog.toml`, `python3 tools/build_changelog.py` has rebuilt CHANGELOG.md, and the version is updated in the `.toc` file.
 6. **Approval:** merge `prototype` into `main`.
 7. **Approval, as a separate decision:** licence.
 8. **Approval, as a separate decision:** name and branding. Check the name hasn't been taken. No trademark
