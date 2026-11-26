@@ -7,7 +7,7 @@ local L = ns.limits
 local App = { loaded = false, warnedFull = false }
 ns.App = App
 
-App.VERSION = "0.3.5"
+App.VERSION = "0.3.6"
 App.DEFAULT_SETTINGS = {
   prompt_on_instance = false,   -- ask (never auto-start) when entering a dungeon or raid
   record_pvp = true,            -- battleground entry/exit/result and own deaths
@@ -243,6 +243,40 @@ function App.start(title)
   App.refresh()
 end
 
+App.CONTINUE_WHY = {
+  active = "Stop the current session first.",
+  full = "This session is full.",
+  not_stopped = "Only a stopped session can be continued.",
+  not_found = "That session is gone.",
+}
+
+-- Continue a stopped session (review window or /ac continue). confirmed = the player said yes.
+function App.continue(id, confirmed)
+  local s = id and App.db.sessions[id] or S.lastStopped(App.db)
+  if not s then App.print("There's no stopped session to continue.") return end
+  local ok, why = S.canContinue(App.db, s.id)
+  if not ok then App.print(App.CONTINUE_WHY[why] or why) return end
+  if not confirmed and api.StaticPopup_Show then
+    api.StaticPopup_Show("ADVENTURECHRONICLER_CONTINUE", s.title ~= "" and s.title or "Untitled", nil, { id = s.id })
+    return
+  end
+  local _, gap = S.continue(App.db, App.now(), s.id)
+  App.warnedFull = false
+  -- A visible line where it picks up again. Nothing is assumed about the time in between.
+  local n = S.addNote(s, App.now(), "Continued after stopping (stopped " .. S.shortDuration(gap) .. ")", "bookmark")
+  if n then
+    App.record({ type = "marker.bookmark", certainty = "confirmed", data = { note_id = n.id } },
+      { allow_paused = true })
+  end
+  if ns.capture.zones then ns.capture.zones.reset(); ns.capture.zones.check(App.ctx) end
+  if ns.capture.quests and ns.capture.quests.rebase then pcall(ns.capture.quests.rebase, App.ctx) end
+  App.print("Recording continues in " .. (s.title ~= "" and s.title or "Untitled")
+    .. ". The time it was stopped shows as a pause.")
+  if ns.ui and ns.ui.indicator then ns.ui.indicator.closed = false end
+  App.refresh()
+  if ns.ui and ns.ui.recorder and ns.ui.recorder.open then ns.ui.recorder.open() end
+end
+
 function App.removeOldestThenStart(id, title)
   S.deleteSession(App.db, id)
   App.start(title)
@@ -340,8 +374,9 @@ function App.export(id)
     end
     return
   end
+  local before = s.exported_at ~= nil
   s.exported_at = App.now()
-  if ns.ui and ns.ui.export then ns.ui.export.open(text, s) end
+  if ns.ui and ns.ui.export then ns.ui.export.open(text, s, before) end
 end
 
 function App.review()
@@ -390,9 +425,9 @@ function App.recorder()
 end
 
 -- What clicking the compass does, from what is on screen:
---   no session                       -> open or close the Adventure Recorder
+--   no session                       -> open or close the Recorder
 --   session, Adventure Recorder open -> close it (the mini recorder takes over)
---   session, mini recorder showing   -> open the Adventure Recorder
+--   session, mini recorder showing   -> open the Recorder
 --   session, mini recorder closed    -> show the mini recorder
 function App.compassAction(active, recorderShown, miniShown)
   if not active then return recorderShown and "close_recorder" or "open_recorder" end
@@ -402,8 +437,8 @@ function App.compassAction(active, recorderShown, miniShown)
 end
 
 App.COMPASS_TIPS = {
-  open_recorder = "Click to open the Adventure Recorder.",
-  close_recorder = "Click to close the Adventure Recorder.",
+  open_recorder = "Click to open the Recorder.",
+  close_recorder = "Click to close the Recorder.",
   show_mini = "Click to show the mini recorder.",
 }
 

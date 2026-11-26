@@ -23,7 +23,7 @@ end
 
 local function build()
   local W = ns.ui.widgets
-  f = W.window("AdventureChroniclerNotes", "Adventure Chronicler: note", 460, 300, { compass = true })
+  f = W.window("AdventureChroniclerNotes", W.BRAND .. ": note", 460, 300, { compass = true })
   -- Same layer as the export window, so a note opened while an export is showing comes up on top.
   f:SetFrameStrata("FULLSCREEN_DIALOG")
   f:SetResizable(true)

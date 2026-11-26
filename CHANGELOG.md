@@ -2,6 +2,13 @@
 
 Built from `changelog.toml` by `tools/build_changelog.py`; edit that file, not this one.
 
+## 0.3.6 · 2026-11-26 · Continue a stopped session, Shift-click quests (prototype, unreleased)
+
+- **New** (Review): Continue a session you stopped: select it in the review window and click Continue, or type /ac continue for the one you stopped last. It asks first, then the same session records again. The time it was stopped shows as a pause, a "Continued after stopping" line marks where it picks up, and nothing is assumed about the time in between.
+- **Improved** (Export): A session you continue keeps its session ID, so if you already imported it, pasting the new code at the same address offers to update that story's log instead of making a second story. The export window says so.
+- **Fixed** (Review): Shift-click now works on quests as well as items, in the details panel (including the quest log list at Start) and on timeline rows about one item or quest. It puts the game's link in chat where the game makes one, otherwise the name in brackets.
+- **Improved** (Windows): Every main window now says Adventure Chronicler at the top. The Recorder, Settings, What's new and Report a problem windows show their own name under it in smaller text; the slim Review, Export and Note windows keep one line.
+
 ## 0.3.5 · 2026-11-26 · Event details in review, export size (prototype, unreleased)
 
 - **New** (Review): Under the session's title, a status line with the state, time recorded, events and notes, and the export size, for example "export 6.2 KB of 512 KB". It turns amber from 400 KB and red if the session is too large to export.

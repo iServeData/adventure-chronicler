@@ -130,6 +130,23 @@ function Dt.questId(o)
   return nil
 end
 
+-- What Shift-click on a timeline row links in chat: the one item or quest the event is about, or nil.
+-- { item = {...} } or { quest = {...} }. Loot windows and reward choices list several items, so the row
+-- itself links nothing; their items each link from the details panel.
+function Dt.linkTarget(o)
+  local items = Dt.items(o)
+  if #items == 1 and o.type ~= "loot.seen" and o.type ~= "quest.rewards_offered" then return { item = items[1] } end
+  local d = o.data or {}
+  local qid = Dt.questId(o)
+  if qid or (type(o.type) == "string" and o.type:find("^quest%.") and o.type ~= "quest.snapshot" and d.title) then
+    return { quest = { quest_id = qid, title = d.title, level = d.level } }
+  end
+  return nil
+end
+
+-- The plain text Shift-click puts in chat when the game can't make a real link: "[Name]".
+function Dt.plainLink(name) return "[" .. tostring(name) .. "]" end
+
 local function itemLabel(it)
   local name = it.name or ("item " .. tostring(it.item_id or "?") .. " (name not loaded)")
   return name .. ((it.count or 1) > 1 and (" x" .. it.count) or "")
@@ -181,6 +198,12 @@ function Dt.lines(o)
   local out = {}
   local function row(label, value)
     out[#out + 1] = { label = label, text = value ~= nil and tostring(value) or Dt.NOT_RECORDED }
+    return out[#out]
+  end
+  -- The "Quest" row of a quest event: hover shows the quest, Shift-click links it in chat.
+  local function questRow()
+    local r = row("Quest", d.title)
+    if d.quest_id or d.title then r.quest = { quest_id = d.quest_id, title = d.title, level = d.level } end
   end
   local function opt(label, value) if value ~= nil and value ~= "" then row(label, value) end end
   local function itemRows(list, heading)
@@ -204,7 +227,7 @@ function Dt.lines(o)
     opt("Group size", d.group_size); opt("Encounter ID", d.encounter_id)
     if d.restricted_values then row("Note", "the game withheld some values") end
   elseif t == "quest.accepted" then
-    row("Quest", d.title); opt("Quest ID", d.quest_id); opt("Level", d.level)
+    questRow(); opt("Quest ID", d.quest_id); opt("Level", d.level)
     local objs = d.objectives or {}
     out[#out + 1] = { label = "Objectives", text = #objs == 0 and Dt.NOT_RECORDED or "" }
     for _, ob in ipairs(objs) do
@@ -213,7 +236,7 @@ function Dt.lines(o)
     opt("Summary", d.summary); opt("Quest text", d.description)
     if d.text_cut then row("Note", "the quest text was longer and was shortened") end
   elseif t == "quest.progress" then
-    row("Quest", d.title); opt("Quest ID", d.quest_id)
+    questRow(); opt("Quest ID", d.quest_id)
     row("Objective", d.text or (d.index and ("objective " .. d.index)))
     opt("Count", d.fulfilled and d.required and (d.fulfilled .. "/" .. d.required))
     row("Done", d.finished and "yes" or "no")
@@ -221,17 +244,18 @@ function Dt.lines(o)
     row("Quests in the log", d.listed); opt("Kept", d.kept)
     for _, qq in ipairs(d.quests or {}) do
       local name = qq.title or ("quest " .. tostring(qq.quest_id))
-      out[#out + 1] = { text = name .. (qq.level and (" (" .. qq.level .. ")") or "") }
+      out[#out + 1] = { text = name .. (qq.level and (" (" .. qq.level .. ")") or ""),
+                        quest = { quest_id = qq.quest_id, title = qq.title, level = qq.level } }
     end
   elseif t == "quest.rewards_offered" then
-    row("Quest", d.title); opt("Quest ID", d.quest_id)
+    questRow(); opt("Quest ID", d.quest_id)
     itemRows(d.choices or {}, "Choices shown")
     if d.guaranteed and #d.guaranteed > 0 then itemRows(d.guaranteed, "Also given") end
   elseif t == "quest.reward_selected" then
     opt("Quest ID", d.quest_id); opt("Choice", d.choice_index)
     itemRows(Dt.items(o), "Item")
   elseif t == "quest.turned_in" then
-    row("Quest", d.title); opt("Quest ID", d.quest_id); opt("XP", d.xp); opt("Money", money(d.money_copper))
+    questRow(); opt("Quest ID", d.quest_id); opt("XP", d.xp); opt("Money", money(d.money_copper))
   elseif t == "item.received" then
     itemRows(Dt.items(o), "Item"); opt("From quest ID", d.quest_id)
   elseif t == "loot.seen" then

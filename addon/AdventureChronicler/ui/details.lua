@@ -2,8 +2,9 @@
 -- Hovering an item shows the game's own item tooltip (from the item data the game already has on this
 -- computer); a quest tries the game's quest tooltip and falls back to what was recorded. Clicking a row
 -- opens a panel beside the review window with everything recorded for it (core/details.lua). Shift-click
--- on an item puts its link in the chat box, only if the player has the chat box open. Read-only: nothing
--- is changed, sent or looked up online.
+-- on an item or quest (in the panel, or a timeline row about one item or quest) puts it in the chat box,
+-- only if the player has the chat box open: the game's link when it makes one, otherwise the name in
+-- brackets as plain text. Read-only: nothing is changed, sent or looked up online.
 local _, ns = ...
 ns = ns or {}
 ns.ui = ns.ui or {}
@@ -14,6 +15,7 @@ ns.ui.details = P
 local panel, scroll, child, head, meta
 local rows = {}
 local WIDTH, TEXT_W = 330, 286
+local QUEST_HEX = "ffd100" -- the game's quest-title yellow
 
 local function W() return ns.ui.widgets end
 local function Dt() return ns.details end
@@ -34,12 +36,60 @@ local function requestItem(id)
   if id and C_Item and C_Item.RequestLoadItemDataByID then pcall(C_Item.RequestLoadItemDataByID, id) end
 end
 
+local gameTooltip -- below
+
+-- The game's quest link, where this client makes one; otherwise nil (the caller uses plain text).
+local function questLink(id)
+  local get = _G.GetQuestLink
+  if not (id and get) then return nil end
+  local ok, link = pcall(get, id)
+  return ok and type(link) == "string" and link ~= "" and link or nil
+end
+
+local function insert(text)
+  if not (text and ChatEdit_InsertLink) then return false end
+  return ChatEdit_InsertLink(text) and true or false
+end
+
+-- Shift-click: put the item or quest in the chat box (only if it's open). The game's own link when it
+-- can make one, otherwise the name in brackets as plain text, so every item and quest does something.
+-- An item the game hasn't loaded gets one more try a moment later. Returns true if it handled the click.
+function P.link(target, retried)
+  if not target then return false end
+  if target.item then
+    local it = target.item
+    local link = itemLink(it.item_id)
+    if not link and it.item_id and not retried and C_Timer and C_Timer.After then
+      requestItem(it.item_id)
+      C_Timer.After(0.3, function() P.link(target, true) end)
+      return true
+    end
+    return insert(link or (it.name and Dt().plainLink(it.name)) or nil)
+  elseif target.quest then
+    local q = target.quest
+    return insert(questLink(q.quest_id) or (q.title and Dt().plainLink(q.title)) or nil)
+  end
+  return false
+end
+
+function P.shiftDown() return IsShiftKeyDown and IsShiftKeyDown() and true or false end
+
+-- A quest: the game's quest tooltip where it has one, otherwise what was recorded.
+function P.showQuest(owner, q)
+  if q.quest_id and gameTooltip(owner, "quest:" .. q.quest_id) then GameTooltip:Show() return end
+  GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
+  GameTooltip:SetText(q.title or ("quest " .. tostring(q.quest_id)), 1, 0.82, 0, 1, true)
+  if q.level then GameTooltip:AddLine("Level " .. q.level, 0.95, 0.90, 0.79) end
+  GameTooltip:AddLine("Shift-click to link it in chat.", 0.66, 0.60, 0.50)
+  GameTooltip:Show()
+end
+
 local function addLines(lines)
   for _, l in ipairs(lines or {}) do GameTooltip:AddLine(l, 0.95, 0.90, 0.79, true) end
 end
 
 -- The game's tooltip for a hyperlink ("item:123" or "quest:456"). True if the game filled it in.
-local function gameTooltip(owner, link)
+function gameTooltip(owner, link)
   GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
   local ok = pcall(GameTooltip.SetHyperlink, GameTooltip, link)
   return ok and (tonumber(GameTooltip:NumLines()) or 0) > 0
@@ -134,7 +184,7 @@ local function build(review)
   scroll:SetPoint("TOPLEFT", 16, -86)
   local foot = W().text(panel, "body", 10, W().MUTED)
   foot:SetPoint("BOTTOMLEFT", 16, 14); foot:SetPoint("RIGHT", -16, 0); foot:SetJustifyH("LEFT")
-  foot:SetText("Only what was recorded. Shift-click an item to link it in chat.")
+  foot:SetText("Only what was recorded. Shift-click an item or quest to link it in chat.")
   panel:Hide()
 end
 
@@ -169,10 +219,12 @@ local function fill(list)
       local it = l.item
       r:SetScript("OnEnter", function(self) P.showItem(self, it) end)
       r:SetScript("OnLeave", P.hideTooltip)
-      r:SetScript("OnClick", function()
-        local link = itemLink(it.item_id)
-        if link and IsShiftKeyDown and IsShiftKeyDown() and ChatEdit_InsertLink then ChatEdit_InsertLink(link) end
-      end)
+      r:SetScript("OnClick", function() if P.shiftDown() then P.link({ item = it }) end end)
+    elseif l.quest then
+      local q = l.quest
+      r:SetScript("OnEnter", function(self) P.showQuest(self, q) end)
+      r:SetScript("OnLeave", P.hideTooltip)
+      r:SetScript("OnClick", function() if P.shiftDown() then P.link({ quest = q }) end end)
     end
     r:Show()
     y = y + h + (l.gap or 2)
@@ -191,8 +243,10 @@ local function render(o)
       local hex = qualityHex(l.item.item_id) or "f2e6c9"
       out[#out + 1] = { text = "|cff" .. hex .. esc(l.text) .. "|r", item = l.item, indent = 12 }
     elseif l.label then
-      local v = l.text ~= "" and (" |cfff2e6c9" .. esc(l.text) .. "|r") or ""
-      out[#out + 1] = { text = "|cffd6ab5c" .. esc(l.label) .. ":|r" .. v }
+      local v = l.text ~= "" and (" |cff" .. (l.quest and QUEST_HEX or "f2e6c9") .. esc(l.text) .. "|r") or ""
+      out[#out + 1] = { text = "|cffd6ab5c" .. esc(l.label) .. ":|r" .. v, quest = l.quest }
+    elseif l.quest then
+      out[#out + 1] = { text = "|cff" .. QUEST_HEX .. esc(l.text) .. "|r", quest = l.quest, indent = 12 }
     else
       out[#out + 1] = { text = esc(l.text), indent = 12 }
     end

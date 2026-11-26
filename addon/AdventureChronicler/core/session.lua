@@ -141,6 +141,57 @@ function S.stop(db, now)
   return s
 end
 
+-- "2h 14m", "5m", "40s": how long a session sat stopped, for the line added when it continues.
+function S.shortDuration(sec)
+  sec = math.max(0, math.floor(sec or 0))
+  local d, h, m = math.floor(sec / 86400), math.floor((sec % 86400) / 3600), math.floor((sec % 3600) / 60)
+  if d > 0 then return d .. "d " .. h .. "h" end
+  if h > 0 then return h .. "h " .. m .. "m" end
+  if m > 0 then return m .. "m" end
+  return sec .. "s"
+end
+
+-- Can this stopped session be continued? True, or false plus a reason:
+-- "not_found", "not_stopped", "active" (another session is open) or "full" (no room for more events).
+function S.canContinue(db, id)
+  local s = id and db.sessions[id]
+  if not s then return false, "not_found" end
+  if s.state ~= "stopped" then return false, "not_stopped" end
+  if S.active(db) then return false, "active" end
+  if #s.observations >= L.max_observations then return false, "full" end
+  return true
+end
+
+-- Continue a stopped session: the same session records again. The time it sat stopped is kept as a
+-- paused segment (the player chose not to record then), so it shows as missing time and nothing is
+-- assumed about it. Returns the session and how many seconds it was stopped.
+function S.continue(db, now, id)
+  local ok, why = S.canContinue(db, id)
+  if not ok then return nil, why end
+  local s = db.sessions[id]
+  local stoppedAt = s.ended_at or s.modified_at or now
+  if stoppedAt > now then stoppedAt = now end -- clock moved backwards; never record negative time
+  s.segments[#s.segments + 1] = { kind = "paused", start = stoppedAt, finish = now, reason = "player" }
+  s.state = "recording"
+  s.ended_at = nil
+  s.modified_at = now
+  s.dedupe = {}
+  s.continued = (s.continued or 0) + 1
+  openSegment(s, "recording", now)
+  db.active_id = id
+  return s, now - stoppedAt
+end
+
+-- The stopped session /ac continue picks: the one stopped most recently.
+function S.lastStopped(db)
+  local best
+  for _, id in ipairs(db.order) do
+    local s = db.sessions[id]
+    if s.state == "stopped" and (not best or (s.ended_at or 0) >= (best.ended_at or 0)) then best = s end
+  end
+  return best
+end
+
 -- Called on every load. last_seen is the time written at the previous logout or reload.
 -- Records the gap honestly; after a long offline gap the session is paused rather than resumed.
 function S.recover(db, now, last_seen)

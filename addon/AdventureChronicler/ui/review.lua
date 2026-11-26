@@ -14,6 +14,7 @@ ns.ui.review = R
 
 local PAGE = 60
 local f, list, listChild, timeline, timelineChild, header, status, pageLabel, titleBox, titleInput, renameLink
+local continueB
 local SIZE_EVERY = 15 -- while recording, the export size is worked out again at most this often (seconds)
 local sizeCache = { key = nil, id = nil, bytes = nil, at = 0, pending = false }
 local sessionRows, lineRows = {}, {}
@@ -122,7 +123,7 @@ local function rowsIn(parent, pool, i, width)
 end
 
 local function build()
-  f = W().window("AdventureChroniclerReview", "Adventure Chronicler: review", 760, 460, { compass = true })
+  f = W().window("AdventureChroniclerReview", W().BRAND .. ": review", 760, 460, { compass = true })
   list, listChild = W().scroll(f, 220, 366)
   list:SetPoint("TOPLEFT", 14, -42)
 
@@ -192,6 +193,18 @@ local function build()
     StaticPopup_Show("ADVENTURECHRONICLER_DELETE_SESSION", warn, nil, { id = s.id })
   end, "red")
   delete:SetPoint("RIGHT", note, "LEFT", -6, 0)
+  -- Continue: only for a stopped session. Greyed out, with the reason on hover, when it can't.
+  continueB = W().button(f, "Continue", 80, function() if R.selected then ns.App.continue(R.selected) end end)
+  continueB:SetPoint("RIGHT", delete, "LEFT", -6, 0)
+  continueB:SetScript("OnEnter", function(self)
+    GameTooltip:SetOwner(self, "ANCHOR_TOP")
+    GameTooltip:SetText("Continue recording", 1, 0.82, 0)
+    GameTooltip:AddLine(self.why or "Record again in this session. The time since you stopped shows as a pause.",
+      0.95, 0.90, 0.79, true)
+    GameTooltip:Show()
+  end)
+  continueB:SetScript("OnLeave", function() GameTooltip:Hide() end)
+  continueB:Hide()
   local nextB = W().button(f, ">", 28, function() R.page = R.page + 1; timeline.toTop(); R.refresh() end)
   nextB:SetPoint("BOTTOMLEFT", 330, 16)
   pageLabel = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
@@ -242,6 +255,16 @@ function R.statusText(s, bytes, shown, total)
   return "|cffcccccc" .. table.concat(parts, " · ") .. "|r"
 end
 
+-- The Continue button: shown for a stopped session, greyed out with the reason when it can't continue.
+function R.updateContinue(s)
+  if not continueB then return end
+  if not s or s.state ~= "stopped" then continueB:Hide() return end
+  local ok, why = ns.Session.canContinue(ns.App.db, s.id)
+  continueB.why = (not ok) and (ns.App.CONTINUE_WHY[why] or why) or nil
+  continueB:SetEnabled(ok == true)
+  continueB:Show()
+end
+
 -- Build the visible rows (notes and observations merged by time) for one session.
 function R.entries(s)
   local out = {}
@@ -281,10 +304,12 @@ function R.refresh()
   local s = R.selected and db.sessions[R.selected]
   if not s then
     header:SetText("No sessions yet. Type /ac start to begin.") status:SetText("") pageLabel:SetText("")
+    R.updateContinue(nil)
     timeline.setContentHeight(0)
     return
   end
   header:SetText(s.title ~= "" and s.title or "Untitled")
+  R.updateContinue(s)
   local all = R.entries(s)
   local filtered, total = ns.reviewfilter.apply(all, R.filter, R.qualityOf)
   refreshFilterButton()
@@ -308,7 +333,15 @@ function R.refresh()
     local when = date("%H:%M:%S", e.t)
     if e.obs then
       r.text:SetText("|cff999999" .. when .. "|r  " .. ns.describe.observation(e.obs) .. ns.details.groupSuffix(e))
-      r:SetScript("OnClick", function() ns.ui.details.toggle(f, e) end)
+      r:SetScript("OnClick", function()
+        -- Shift-click links the row's item or quest in chat, like the details panel; a plain click opens it.
+        local P = ns.ui.details
+        if P.shiftDown() and not e.group then
+          local target = ns.details.linkTarget(e.obs)
+          if target then P.link(target) return end
+        end
+        P.toggle(f, e)
+      end)
       r:SetScript("OnEnter", function(self) ns.ui.details.showEntry(self, e) end)
       r:SetScript("OnLeave", function() ns.ui.details.hideTooltip() end)
       -- A grouped row's x deletes every line in it, as the row shows them as one.

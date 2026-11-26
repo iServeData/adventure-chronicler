@@ -13,6 +13,20 @@
 
 Recorded time counts only `recording` segments. Gaps aren't counted, and the addon never fills them in.
 
+### Continuing a stopped session
+
+A stopped session can record again: select it in `/ac review` and press Continue, or type `/ac continue`
+for the one you stopped last. The add-on asks first, and only when no other session is open and the session
+isn't full. The same session (same ID) goes back to `recording`:
+
+- The time it sat stopped becomes a `paused` segment with reason `player`, so it counts as not recorded and
+  the add-on assumes nothing about it.
+- A bookmark "Continued after stopping (stopped 2h 14m)" marks where it picks up.
+- `ended_at` is cleared until you stop it again.
+
+Because the ID stays the same, pasting the new import code on QuestersBoard offers to update the story that
+already has this session's log; it never creates a second story or counts anything twice.
+
 ## Certainty
 
 Every observation carries one of these labels:

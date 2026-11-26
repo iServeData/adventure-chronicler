@@ -122,3 +122,40 @@ describe("tooltips and the details panel", function()
     assert.truthy(table.concat(D.tooltip(merged), "\n"):find("Repeated 2 more times", 1, true))
   end)
 end)
+
+-- MOCKED (0.3.6): Shift-click targets. Every quest and item row says what it would link.
+describe("what Shift-click links", function()
+  it("marks quest rows in the details panel, including the quest log list", function()
+    local D = H.load().details
+    local snap = obs(1, "quest.snapshot", { listed = 2, kept = 2, quests = {
+      { quest_id = 42, title = "Example Errand", level = 12 }, { quest_id = 43 } } }).obs
+    local qs = {}
+    for _, r in ipairs(D.lines(snap)) do if r.quest then qs[#qs + 1] = r end end
+    assert.equal(2, #qs)
+    assert.same({ quest_id = 42, title = "Example Errand", level = 12 }, qs[1].quest)
+    assert.equal("quest 43", qs[2].text)
+    for _, t in ipairs({ "quest.accepted", "quest.progress", "quest.rewards_offered", "quest.turned_in" }) do
+      local found
+      for _, r in ipairs(D.lines(obs(1, t, { quest_id = 42, title = "Example Errand" }).obs)) do
+        if r.label == "Quest" then found = r.quest end
+      end
+      assert.equal(42, found and found.quest_id, t)
+    end
+  end)
+
+  it("links a timeline row's one item or quest, and nothing for a list", function()
+    local D = H.load().details
+    local t = D.linkTarget(obs(1, "item.received", { item_id = 7, name = "Example Cloak" }).obs)
+    assert.equal(7, t.item.item_id)
+    t = D.linkTarget(obs(1, "quest.accepted", { quest_id = 42, title = "Example Errand", level = 12 }).obs)
+    assert.same({ quest_id = 42, title = "Example Errand", level = 12 }, t.quest)
+    t = D.linkTarget(obs(1, "quest.reward_selected", { quest_id = 42, item_id = 11, name = "Example Boots" }).obs)
+    assert.equal(11, t.item.item_id) -- the chosen item, not the quest
+    assert.is_nil(D.linkTarget(obs(1, "loot.seen", { items = { { item_id = 1, name = "Example Rags" } } }).obs))
+    assert.is_nil(D.linkTarget(obs(1, "quest.rewards_offered", { quest_id = 5,
+      choices = { { item_id = 11 }, { item_id = 12 } } }).obs).item)
+    assert.is_nil(D.linkTarget(obs(1, "zone.enter", { zone = "Example Vale" }).obs))
+    assert.is_nil(D.linkTarget(obs(1, "quest.snapshot", { quests = {} }).obs))
+    assert.equal("[Example Errand]", D.plainLink("Example Errand"))
+  end)
+end)

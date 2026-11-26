@@ -14,6 +14,7 @@ ns.ui.export = X
 local f, edit, info, hint, text, session, kind, scroll, sel
 local tabs = {}
 local step1, step2, pasteBox, pasteNote
+local exportedBefore = false
 
 local HINT = {
   markdown = "Readable copy. To keep it as a file, paste into a new file and save it as:",
@@ -34,8 +35,17 @@ local function layout(isCode)
     local url = ns.App.link()
     pasteBox:SetValue(url or "")
     pasteNote:SetText("Click the address and press Ctrl+C (Cmd+C on Mac), then paste it in your browser.\n"
-      .. "Change it in Settings (Export tab) or with |cffffd100/ac link|r.")
+      .. X.secondLine(session, exportedBefore))
   end
+end
+
+-- The second line under the address. A session that was continued or exported before may already be on
+-- the board: pasting it again offers to update that story's log, never a second story.
+function X.secondLine(s, before)
+  if s and ((s.continued or 0) > 0 or before) then
+    return "Already imported it? Paste it at the same address to update that story's log."
+  end
+  return "Change it in Settings (Export tab) or with |cffffd100/ac link|r."
 end
 
 local function setKind(k)
@@ -65,7 +75,7 @@ end
 
 local function build()
   local W = ns.ui.widgets
-  f = W.window("AdventureChroniclerExport", "Adventure Chronicler: export", 540, 430, { compass = true })
+  f = W.window("AdventureChroniclerExport", W.BRAND .. ": export", 540, 430, { compass = true })
   -- Sits above the review window so its rows never show through. The note window shares this layer, and
   -- whichever of the two was opened or clicked last is on top.
   f:SetFrameStrata("FULLSCREEN_DIALOG")
@@ -123,9 +133,10 @@ X.pasteAddress = function() return pasteBox and pasteBox.value end
 X.refresh = function() if f and f:IsShown() and kind == "code" then layout(true) end end
 
 -- exportText is the import code App.export already checked; the other formats are made on demand.
-function X.open(exportText, s)
+function X.open(exportText, s, before)
   if not f then build() end
   session = s
+  exportedBefore = before == true
   local sum = ns.Export.summary(s)
   local name = s.title ~= nil and s.title ~= "" and ("|cffd6ab5c" .. s.title .. "|r · ") or ""
   info:SetText(string.format("%s%d observations, %d notes (%.1f KB)\n"

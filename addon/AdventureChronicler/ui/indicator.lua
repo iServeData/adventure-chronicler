@@ -2,7 +2,7 @@
 -- button (x) and a row of small buttons: Open, Note, Bookmark, Pause or Resume, Stop, Export and
 -- Review (/ac set buttons off hides the row). When it shows (0.3.3):
 --   - a session is recording or paused, and
---   - the Adventure Recorder window is closed (closing that window while recording brings it up), and
+--   - the Recorder window is closed (closing that window while recording brings it up), and
 --   - you haven't closed it with x. The compass on the minimap brings it back; so does logging in or
 --     reloading while a session is open, so it is always clear when the addon is collecting.
 -- If the minimap button is turned off, closing it says once in chat how to get back (/ac).
@@ -29,7 +29,7 @@ local function pauseOrResume()
   if s and s.state == "paused" then ns.App.resume() else ns.App.pause() end
 end
 
--- Closed with x, until the compass brings it back, a session starts or stops, the Adventure Recorder
+-- Closed with x, until the compass brings it back, a session starts or stops, the Recorder
 -- window is closed, or the game is reloaded. Not saved: after a login or reload it shows again.
 I.closed = false
 local warnedFor
@@ -132,7 +132,7 @@ local function build()
   frame:SetScript("OnEnter", function(self)
     GameTooltip:SetOwner(self, "ANCHOR_BOTTOM")
     GameTooltip:AddLine("Adventure Chronicler")
-    GameTooltip:AddLine("Click to open the Adventure Recorder. Drag to move.", 1, 1, 1)
+    GameTooltip:AddLine("Click to open the Recorder. Drag to move.", 1, 1, 1)
     GameTooltip:AddLine("x closes it; the compass on the minimap brings it back.", 0.8, 0.8, 0.8)
     GameTooltip:AddLine("The small buttons: open, note, bookmark, pause, stop, export, review.", 0.8, 0.8, 0.8)
     GameTooltip:AddLine("/ac set buttons off hides them.", 0.8, 0.8, 0.8)
@@ -161,7 +161,7 @@ end
 
 function I.frames() return frame, buttons end
 
--- Whether the mini recorder should be on screen. recorderShown: the Adventure Recorder window is open.
+-- Whether the mini recorder should be on screen. recorderShown: the Recorder window is open.
 function I.visible(s, recorderShown, closed)
   return s ~= nil and not recorderShown and not closed
 end

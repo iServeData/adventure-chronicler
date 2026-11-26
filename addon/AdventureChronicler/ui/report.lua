@@ -24,7 +24,8 @@ end
 
 local function build()
   local W = ns.ui.widgets
-  f = W.window("AdventureChroniclerReport", "Report a problem", 560, 420, { compass = true, header = 40 })
+  f = W.window("AdventureChroniclerReport", W.BRAND, 560, 420,
+    { compass = true, header = 40, titleSize = 17, subtitle = "Report a problem" })
   f:SetFrameStrata("FULLSCREEN_DIALOG")
   local s1 = W.text(f, "body", 13, W.GOLD)
   s1:SetPoint("TOPLEFT", 20, -54)

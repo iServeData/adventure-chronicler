@@ -52,7 +52,8 @@ end
 
 local function build()
   local W = ns.ui.widgets
-  f = W.window("AdventureChroniclerWhatsNew", "What's new", 680, 460, { compass = true, header = 40 })
+  f = W.window("AdventureChroniclerWhatsNew", W.BRAND, 680, 460,
+    { compass = true, header = 40, titleSize = 17, subtitle = "What's new" })
   f:SetFrameStrata("FULLSCREEN_DIALOG")
 
   local list

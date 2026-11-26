@@ -301,6 +301,13 @@ function Q.snapshot(ctx)
                data = { quests = quests, listed = #order, kept = #quests } })
 end
 
+-- When a stopped session continues: read the quest log again so later progress is measured from now,
+-- without recording a new list (the session already has its list from Start).
+function Q.rebase(ctx)
+  local log = readLog(ctx.api)
+  Q.baseline = baselineFrom(log)
+end
+
 -- ------------------------------------------------------------------ turn-ins
 
 -- QUEST_COMPLETE: the reward panel is open.

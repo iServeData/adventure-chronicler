@@ -206,7 +206,7 @@ describe("what's new", function()
     local ns = H.load()
     local list = ns.CHANGELOG
     assert.truthy(#list >= 2)
-    assert.equal("0.3.5", list[1].version)
+    assert.equal("0.3.6", list[1].version)
     for _, r in ipairs(list) do assert.truthy(#r.changes >= 1, r.version) end
   end)
 

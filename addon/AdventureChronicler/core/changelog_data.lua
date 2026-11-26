@@ -4,6 +4,19 @@ local _, ns = ...
 ns = ns or {}
 
 ns.CHANGELOG = {
+  { version = "0.3.6", date = "2026-11-26", status = "prototype, unreleased",
+    title = "Continue a stopped session, Shift-click quests",
+    changes = {
+      { kind = "New", area = "Review",
+        text = "Continue a session you stopped: select it in the review window and click Continue, or type /ac continue for the one you stopped last. It asks first, then the same session records again. The time it was stopped shows as a pause, a \"Continued after stopping\" line marks where it picks up, and nothing is assumed about the time in between." },
+      { kind = "Improved", area = "Export",
+        text = "A session you continue keeps its session ID, so if you already imported it, pasting the new code at the same address offers to update that story's log instead of making a second story. The export window says so." },
+      { kind = "Fixed", area = "Review",
+        text = "Shift-click now works on quests as well as items, in the details panel (including the quest log list at Start) and on timeline rows about one item or quest. It puts the game's link in chat where the game makes one, otherwise the name in brackets." },
+      { kind = "Improved", area = "Windows",
+        text = "Every main window now says Adventure Chronicler at the top. The Recorder, Settings, What's new and Report a problem windows show their own name under it in smaller text; the slim Review, Export and Note windows keep one line." },
+    },
+  },
   { version = "0.3.5", date = "2026-11-26", status = "prototype, unreleased",
     title = "Event details in review, export size",
     changes = {

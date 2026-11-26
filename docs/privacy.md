@@ -8,7 +8,7 @@ paste it somewhere yourself.
 
 Only between `/ac start` and `/ac stop`, and only while not paused. The compass button on the minimap shows a
 red (recording) or gold (paused) dot the whole time, and the mini recorder (REC / PAUSED and the time) shows
-whenever the Adventure Recorder window is closed. You can close the mini recorder with its x; it comes back
+whenever the Recorder window is closed. You can close the mini recorder with its x; it comes back
 after a login or `/reload`. If you've also turned the minimap button off, chat says once that it's still
 recording. If the game closes or crashes, the next login records a gap and doesn't pretend you were
 recording. After a long gap the session is paused until you resume it.

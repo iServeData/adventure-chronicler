@@ -12,6 +12,7 @@ local HELP = {
   "/ac title <name>  rename the session that is open",
   "/ac shot [clean]  take a screenshot (as seen, or clean scene out of combat)",
   "/ac stop  end the session",
+  "/ac continue  record again in the session you stopped last (asks first)",
   "/ac review  open the review window",
   "/ac export  copy the latest session (import code, Markdown, text or JSON)",
   "/ac settings  open the settings window (Community, Export, Options, Help)",
@@ -53,6 +54,7 @@ function ns.handleSlash(msg)
   elseif cmd == "title" then App.rename(rest)
   elseif cmd == "shot" then App.shot((rest == "clean" or rest == "clean_scene") and "clean_scene" or "as_seen")
   elseif cmd == "stop" then App.stop()
+  elseif cmd == "continue" then App.continue()
   elseif cmd == "" then App.recorder()
   elseif cmd == "review" then App.review()
   elseif cmd == "export" then App.export()

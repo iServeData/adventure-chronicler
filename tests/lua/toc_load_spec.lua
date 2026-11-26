@@ -38,6 +38,8 @@ local function withGame(fn)
     UnitLevel = function() return 24 end, GetRealmName = function() return "Example Realm" end,
     GetCursorPosition = function() return 100, 300 end,
     time = function() return 1800000000 end, date = os.date, tinsert = table.insert,
+    IsShiftKeyDown = function() return false end, ChatEdit_InsertLink = function() return false end,
+    GetQuestLink = false,
   }
   local mm = stubObject()
   mm.GetWidth = function() return 140 end
@@ -199,7 +201,7 @@ describe("addon load (stubbed)", function()
       slash("report")
       ns.ui.report.setWhat("The mini recorder didn't show")
       local report = ns.ui.report.text()
-      assert.truthy(report:find("Adventure Chronicler 0.3.5", 1, true))
+      assert.truthy(report:find("Adventure Chronicler 0.3.6", 1, true))
       assert.truthy(report:find("loot.lua:1: boom", 1, true))
       assert.truthy(report:find("What happened: The mini recorder didn't show", 1, true))
       assert.is_nil(report:find("Examplechar", 1, true)); assert.is_nil(report:find("Example Realm", 1, true))
@@ -209,7 +211,7 @@ describe("addon load (stubbed)", function()
       -- What's new opens on the newest version, and from Help.
       slash("whatsnew")
       assert.is_true(ns.ui.whatsnew.isShown())
-      assert.equal("0.3.5", ns.ui.whatsnew.current().version)
+      assert.equal("0.3.6", ns.ui.whatsnew.current().version)
 
       -- The review window's Filter only hides rows.
       slash("review")
@@ -234,6 +236,67 @@ describe("addon load (stubbed)", function()
       ns.ui.details.toggle(_G.UIParent, firstObs)
       assert.is_false(ns.ui.details.isShown())
       assert.equal(obsBefore, #s.observations)
+
+      -- 0.3.6: Shift-click puts an item or quest in chat: the game's link, else the name as plain text.
+      local inserted = {}
+      _G.ChatEdit_InsertLink = function(t) inserted[#inserted + 1] = t; return true end
+      _G.GetQuestLink = nil
+      local P = ns.ui.details
+      assert.is_true(P.link({ quest = { quest_id = 42, title = "Example Errand", level = 12 } }))
+      assert.equal("[Example Errand]", inserted[#inserted])
+      _G.GetQuestLink = function(id) return "|cffffff00|Hquest:" .. id .. ":12|h[Example Errand]|h|r" end
+      P.link({ quest = { quest_id = 42, title = "Example Errand" } })
+      assert.equal("|cffffff00|Hquest:42:12|h[Example Errand]|h|r", inserted[#inserted])
+      local n0 = #inserted
+      P.link({ item = { item_id = 101, name = "Example Rags" } }) -- not loaded: asks the game, tries again
+      assert.equal(n0, #inserted)
+      P.link({ item = { item_id = 101, name = "Example Rags" } }, true)
+      assert.equal("[Example Rags]", inserted[#inserted])
+      _G.C_Item = { GetItemInfo = function() return "Example Rags", "|cff9d9d9d|Hitem:101::|h[Example Rags]|h|r" end }
+      P.link({ item = { item_id = 101, name = "Example Rags" } })
+      assert.equal("|cff9d9d9d|Hitem:101::|h[Example Rags]|h|r", inserted[#inserted])
+      _G.C_Item = nil
+      -- The quest log list in the details panel: each quest row hovers and links.
+      local snap = { t = 1800000000, obs = { type = "quest.snapshot", certainty = "seen", t = 1800000000,
+        data = { listed = 1, kept = 1, quests = { { quest_id = 42, title = "Example Errand", level = 12 } } } } }
+      P.open(_G.UIParent, snap)
+      assert.truthy(table.concat(P.texts(), "\n"):find("Example Errand (12)", 1, true))
+      P.hide()
+
+      -- 0.3.6: every main window says Adventure Chronicler at the top; the taller ones name the window under it.
+      local win = ns.ui.widgets.window("AdventureChroniclerTest", ns.ui.widgets.BRAND, 300, 200,
+        { header = 48, compass = true, subtitle = "Recorder" })
+      assert.equal("Adventure Chronicler", win.title:GetText())
+      assert.equal("Recorder", win.subtitle:GetText())
+      assert.is_nil(rawget(ns.ui.widgets.window("AdventureChroniclerTest2", "x", 100, 100), "subtitle"))
+
+      -- 0.3.6: continue a stopped session. It asks first; the stopped time becomes a pause; same session.
+      assert.equal("stopped", s.state)
+      local asked
+      _G.StaticPopup_Show = function(which, a, _, data) asked = { which, a, data } end
+      slash("continue")
+      assert.equal("ADVENTURECHRONICLER_CONTINUE", asked[1]); assert.equal(s.id, asked[3].id)
+      assert.equal("stopped", s.state) -- nothing happens until the player says yes
+      local nSeg, nNotes, stoppedAt = #s.segments, #s.notes, s.ended_at
+      ns.App.continue(s.id, true)
+      assert.equal("recording", s.state); assert.equal(s.id, db.active_id); assert.is_nil(s.ended_at)
+      local pause = s.segments[nSeg + 1]
+      assert.same({ "paused", "player", stoppedAt }, { pause.kind, pause.reason, pause.start })
+      assert.equal("recording", s.segments[nSeg + 2].kind)
+      assert.equal(nNotes + 1, #s.notes)
+      assert.truthy(s.notes[#s.notes].text:find("^Continued after stopping %(stopped "))
+      assert.equal("Already imported it? Paste it at the same address to update that story's log.",
+        ns.ui.export.secondLine(s, false))
+      assert.truthy(ns.ui.export.secondLine({}, false):find("/ac link", 1, true))
+      slash("stop")
+      -- Another session recording: the stopped one can't continue until that one stops.
+      slash("start Second synthetic run")
+      local before2 = #printed
+      ns.App.continue(s.id, true)
+      assert.equal("stopped", s.state)
+      assert.truthy(printed[before2 + 1]:find("Stop the current session first.", 1, true))
+      slash("stop")
+      _G.StaticPopup_Show = function() end
 
       ns.App.DEFAULT_LINK = ""
       ns.COMMUNITY.import_url = ""

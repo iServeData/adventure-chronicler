@@ -17,7 +17,7 @@ StaticPopupDialogs["ADVENTURECHRONICLER_REMOVE_OLDEST"] = {
 }
 
 StaticPopupDialogs["ADVENTURECHRONICLER_STOP"] = {
-  text = "Stop recording %s? You can still review and export it, but it can't be resumed.",
+  text = "Stop recording %s? You can still review and export it, and continue it later from the review window.",
   button1 = "Stop", button2 = "Keep recording",
   OnAccept = function() ns.App.stop() end,
   timeout = 0, whileDead = true, hideOnEscape = true, preferredIndex = 3,
@@ -40,4 +40,11 @@ StaticPopupDialogs["ADVENTURECHRONICLER_UNSAVED_NOTE"] = {
   OnAccept = function() ns.ui.notes.reopen() end,
   OnCancel = function(_, _, reason) if reason == "clicked" then ns.ui.notes.discard() else ns.ui.notes.reopen() end end,
   timeout = 0, whileDead = true, hideOnEscape = false, preferredIndex = 3,
+}
+
+StaticPopupDialogs["ADVENTURECHRONICLER_CONTINUE"] = {
+  text = "Continue %s? The time since you stopped will show as a pause.",
+  button1 = "Continue", button2 = "Cancel",
+  OnAccept = function(_, data) ns.App.continue(data.id, true) end,
+  timeout = 0, whileDead = true, hideOnEscape = true, preferredIndex = 3,
 }

@@ -214,7 +214,7 @@ end
 -- -------------------------------------------------------------------- Help
 
 local HELP_LINES = {
-  { "/ac", "open the Adventure Recorder" },
+  { "/ac", "open the Recorder" },
   { "/ac start, /ac pause, /ac stop", "recording" },
   { "/ac note, /ac mark", "a note or a bookmark" },
   { "/ac review", "your sessions, with a filter" },
@@ -250,7 +250,8 @@ local function selectTab(name)
 end
 
 local function build()
-  f = W().window("AdventureChroniclerSettings", "Adventure Chronicler", 660, 470, { compass = true, header = 40 })
+  f = W().window("AdventureChroniclerSettings", W().BRAND, 660, 470,
+    { compass = true, header = 40, titleSize = 17, subtitle = "Settings" })
   f:SetFrameStrata("HIGH")
   version = W().text(f, "body", 11, W().MUTED)
   version:SetPoint("RIGHT", f.closeButton, "LEFT", -12, 0)

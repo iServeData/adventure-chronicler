@@ -206,3 +206,77 @@ describe("retention", function()
     assert.same(S.newStore(), S.migrateStore("garbage"))
   end)
 end)
+
+-- MOCKED (0.3.6): continuing a stopped session.
+describe("continuing a stopped session", function()
+  local ns, S, db, c
+  before_each(function()
+    ns = H.load(); S = ns.Session; db = S.newStore(); c = H.clock()
+  end)
+
+  it("records again in the same session and keeps the stopped time as a pause", function()
+    local s = assert(S.start(db, c.now(), { title = "Evening run" }))
+    c.advance(600); S.stop(db, c.now())
+    local stoppedAt = s.ended_at
+    c.advance(3 * 3600 + 120)
+    local again, gap = S.continue(db, c.now(), s.id)
+    assert.equal(s, again); assert.equal(3 * 3600 + 120, gap)
+    assert.equal("recording", s.state); assert.equal(s.id, db.active_id); assert.is_nil(s.ended_at)
+    assert.same({ kind = "paused", start = stoppedAt, finish = c.now(), reason = "player" }, s.segments[2])
+    assert.equal("recording", s.segments[3].kind); assert.is_nil(s.segments[3].finish)
+    c.advance(60)
+    assert.equal(660, S.recordedSeconds(s, c.now())) -- the stopped time is not counted as recorded
+    assert.equal(1, s.continued)
+    assert.is_false(s.interrupted) -- the player chose to stop; nothing was lost
+    S.stop(db, c.now())
+    assert.equal(1, #db.order) -- still one session, not a new one
+  end)
+
+  it("refuses when it can't, and says why", function()
+    local a = assert(S.start(db, c.now(), {}))
+    assert.same({ false, "not_stopped" }, { S.canContinue(db, a.id) })
+    S.stop(db, c.now())
+    local b = assert(S.start(db, c.now(), {}))
+    assert.same({ false, "active" }, { S.canContinue(db, a.id) })
+    assert.same({ nil, "active" }, { S.continue(db, c.now(), a.id) })
+    S.stop(db, c.now())
+    assert.same({ false, "not_found" }, { S.canContinue(db, "s-missing") })
+    for i = 1, ns.limits.max_observations do a.observations[i] = { seq = i, t = 0, type = "zone.enter" } end
+    assert.same({ false, "full" }, { S.canContinue(db, a.id) })
+    assert.is_true(S.canContinue(db, b.id))
+  end)
+
+  it("never records negative time if the clock went backwards", function()
+    local s = assert(S.start(db, c.now(), {}))
+    c.advance(100); S.stop(db, c.now())
+    c.advance(-50)
+    local _, gap = S.continue(db, c.now(), s.id)
+    assert.equal(0, gap)
+    local p = s.segments[#s.segments - 1]
+    assert.is_true(p.finish >= p.start)
+  end)
+
+  it("picks the most recently stopped session for /ac continue", function()
+    local a = assert(S.start(db, c.now(), {})); c.advance(10); S.stop(db, c.now())
+    local b = assert(S.start(db, c.now(), {})); c.advance(10); S.stop(db, c.now())
+    assert.equal(b, S.lastStopped(db))
+    c.advance(10); S.continue(db, c.now(), a.id); c.advance(10); S.stop(db, c.now())
+    assert.equal(a, S.lastStopped(db))
+  end)
+
+  it("says how long it was stopped in short words", function()
+    assert.equal("40s", S.shortDuration(40)); assert.equal("5m", S.shortDuration(300))
+    assert.equal("2h 14m", S.shortDuration(2 * 3600 + 14 * 60)); assert.equal("1d 3h", S.shortDuration(27 * 3600))
+  end)
+
+  it("exports a continued session that the import checks accept", function()
+    local s = assert(S.start(db, c.now(), { title = "Evening run" }))
+    S.observe(db, c.now(), { type = "zone.enter", certainty = "confirmed", data = { zone = "Example Vale" } })
+    c.advance(60); S.stop(db, c.now()); c.advance(600); S.continue(db, c.now(), s.id); c.advance(60)
+    local doc = ns.Export.build(s, {}, "0.3.6")
+    local kinds = {}
+    for _, seg in ipairs(doc.session.segments) do kinds[#kinds + 1] = seg.kind .. ":" .. tostring(seg.reason) end
+    assert.same({ "recording:null", "paused:player", "recording:null" }, kinds)
+    assert.equal("recording", doc.session.state)
+  end)
+end)

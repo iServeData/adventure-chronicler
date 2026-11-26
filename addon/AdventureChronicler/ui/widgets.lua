@@ -13,6 +13,8 @@ function W.media(name) return MEDIA .. name end
 
 W.FONT_TITLE = "Fonts\\MORPHEUS.TTF"
 W.FONT_BODY = "Fonts\\FRIZQT__.TTF"
+-- The add-on's name at the top of every window. The name is provisional, so it lives in one place.
+W.BRAND = "Adventure Chronicler"
 W.CREAM = { 0.95, 0.90, 0.79 }
 W.GOLD = { 0.84, 0.67, 0.36 }
 W.INK = { 0.22, 0.14, 0.06 }
@@ -132,8 +134,30 @@ function W.window(name, title, width, height, opts)
     left = 12 + size + 8
   end
   f.title = W.text(f, "title", opts.titleSize or (header >= 40 and 20 or 15), W.CREAM)
-  f.title:SetPoint("LEFT", f, "TOPLEFT", left, -header / 2)
   f.title:SetText(title)
+  f.title:SetJustifyH("LEFT")
+  f.title:SetWordWrap(false)
+  if opts.subtitle then
+    -- Two lines: the add-on's name, and the window's own name under it in smaller, muted text.
+    f.title:SetPoint("BOTTOMLEFT", f, "TOPLEFT", left, -header / 2 - 1)
+    f.subtitle = W.text(f, "body", opts.subtitleSize or 11, W.GOLD)
+    f.subtitle:SetPoint("TOPLEFT", f.title, "BOTTOMLEFT", 1, -2)
+    f.subtitle:SetJustifyH("LEFT")
+    f.subtitle:SetText(opts.subtitle)
+  else
+    f.title:SetPoint("LEFT", f, "TOPLEFT", left, -header / 2)
+  end
+
+  -- If the title is wider than the room before the close button (the narrow Recorder), step the font down
+  -- rather than cut the name off.
+  local room = width - left - (header >= 40 and 24 or 18) - 24
+  local size = opts.titleSize or (header >= 40 and 20 or 15)
+  local w = tonumber(f.title:GetStringWidth())
+  while w and w > room and size > 12 do
+    size = size - 1
+    f.title:SetFont(W.FONT_TITLE, size, "")
+    w = tonumber(f.title:GetStringWidth())
+  end
 
   local close = iconButton(f, header >= 40 and 24 or 18, "icon_close")
   close:SetPoint("RIGHT", f, "TOPRIGHT", -12, -header / 2)

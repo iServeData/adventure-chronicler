@@ -13,11 +13,11 @@ or a Markdown, text or HTML file.
 
 - It only records while you've started a session. While it's recording or paused, the compass button on
   the minimap shows a red (recording) or gold (paused) dot, and the mini recorder (REC / PAUSED, the time
-  and small buttons) shows whenever the Adventure Recorder window is closed. The mini recorder's x hides it.
+  and small buttons) shows whenever the Recorder window is closed. The mini recorder's x hides it.
   It comes back from the compass and after a login or `/reload`. If the minimap button is off, closing the
   mini recorder says once in chat that it's still recording.
-- The compass button on the minimap opens the Adventure Recorder, or while a session is open, the mini
-  recorder (its first button opens the Adventure Recorder). Drag it around the minimap;
+- The compass button on the minimap opens the Recorder, or while a session is open, the mini
+  recorder (its first button opens the Recorder). Drag it around the minimap;
   `/ac set minimap off` hides it, and `/ac` always works.
 - It records your own activity: zones, instance entry and exit, boss encounter results, quests you accept
   with their objectives and progress, quest turn-ins and reward choices, battleground results, your own deaths, and bookmarks.
@@ -42,6 +42,7 @@ or a Markdown, text or HTML file.
 | `/ac title <name>` | Rename the session that is open (or click the title in the recorder). Any session, stopped too, can be renamed from its title in `/ac review` |
 | `/ac shot` / `/ac shot clean` | Take a screenshot as seen, or a clean scene (outside combat) |
 | `/ac stop` | End the session |
+| `/ac continue` | Record again in the session you stopped last (asks first; the stopped time shows as a pause) |
 | `/ac review` | Review, edit or delete sessions, notes and events. The line under the title shows the export size. Hover an event for a tooltip (the game's own for items); click it for everything recorded |
 | `/ac export` | Show the latest session to copy: the import code for QuestersBoard, or Markdown, Text or JSON to keep as a file |
 | `/ac link <https://...>` | Set the address the export window says to paste the code at. It starts as your community's address (or the placeholder `https://example.com/import` in the public build); `/ac link clear` goes back to it |

@@ -18,8 +18,8 @@ local rows, buttons, links, tick = {}, {}, {}, 0
 
 local function build()
   local W = ns.ui.widgets
-  f = W.window("AdventureChroniclerRecorder", "Adventure Recorder", WIDTH, HEIGHT,
-    { header = 48, compass = true, titleSize = 19 })
+  f = W.window("AdventureChroniclerRecorder", W.BRAND, WIDTH, HEIGHT,
+    { header = 48, compass = true, titleSize = 17, subtitle = "Recorder" })
   f:ClearAllPoints()
   f:SetPoint("CENTER", -300, 40)
 

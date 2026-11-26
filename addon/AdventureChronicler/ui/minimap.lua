@@ -1,5 +1,5 @@
 -- Adventure Chronicler: the compass button on the minimap, shown whenever the addon is loaded (/ac set
--- minimap off hides it). Clicking it opens the Adventure Recorder, or while a session is open shows the
+-- minimap off hides it). Clicking it opens the Recorder, or while a session is open shows the
 -- mini recorder (App.compass). Drag it around the minimap's edge. While a session is recording it shows
 -- a red dot (gold while paused). The border and background are the game's own minimap button art.
 local _, ns = ...
