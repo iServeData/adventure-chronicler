@@ -74,9 +74,11 @@ title part of the name is lowercase with underscores (`untitled` if the session 
 are also kept in the add-on's saved-data file in the game folder, but that file is the add-on's storage, not an
 export.
 
-### QuestersBoard button
+### Where to paste the code
 
-WoW doesn't let add-ons open a browser either. Open QuestersBoard shows your community's address, selected,
-so Ctrl+C copies it for your browser. It starts as the placeholder `https://example.com/import`. Set your
-own with `/ac link https://...` (only `https://` addresses are accepted); `/ac link clear` goes back to the
-default. No real community address ships with the add-on.
+WoW doesn't let add-ons open a browser either. The export window says "2. Paste the code at:" and shows the
+address in a field you can click and copy with Ctrl+C. In the public build it is the placeholder
+`https://example.com/import`; a community's own build (`tools/build_zip.py --community FILE`) fills in that
+community's import page. Set your own with `/ac link https://...` or on the Settings window's Export tab (only
+`https://` addresses are accepted); `/ac link clear` goes back to the add-on's. No real community address is in
+the public source.

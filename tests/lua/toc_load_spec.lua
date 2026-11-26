@@ -7,7 +7,7 @@ local function stubObject()
   local o = {}
   return setmetatable(o, { __index = function(t, k)
     local f = function() return stubObject() end
-    if k == "GetText" then f = function() return t._text or "" end end
+    if k == "GetText" then f = function() return rawget(t, "_text") or "" end end
     if k == "SetText" then f = function(_, v) t._text = v end end
     if k == "IsShown" then f = function() return t._shown end end
     if k == "Show" then f = function() t._shown = true end end
@@ -152,12 +152,78 @@ describe("addon load (stubbed)", function()
       assert.equal("https://example.org/board/import", ns.App.link())
       slash("export")  -- the window opens with the address set
       for _, k in ipairs({ "markdown", "text", "json", "code" }) do ns.ui.export.setKind(k) end
-      ns.ui.export.openLink()
+      -- 0.3.4: the import code shows "Paste the code at:" with the address, instead of a button.
+      assert.equal("https://example.org/board/import", ns.ui.export.pasteAddress())
       slash("link clear")
       assert.equal("", settings.questersboard_url)
       assert.equal("https://example.com/import", ns.App.link())
+      ns.ui.export.setKind("code")
+      assert.equal("https://example.com/import", ns.ui.export.pasteAddress())
+
+      -- A community build's values (core/community.lua) come after your own and before the default.
+      ns.COMMUNITY.import_url = "https://example.net/wow/import"
+      ns.COMMUNITY.invite = "https://example.net/invite"
+      ns.COMMUNITY.name = "Example Community"
+      assert.equal("https://example.net/wow/import", ns.App.link())
+      assert.equal("https://example.net/invite", ns.App.invite())
+      slash("community http://example.com/x")  -- refused: not https
+      assert.equal("", settings.community_invite)
+      slash("community https://example.com/own-invite")
+      assert.equal("https://example.com/own-invite", ns.App.invite())
+      slash("community clear")
+      assert.equal("https://example.net/invite", ns.App.invite())
+
+      -- The settings window opens on each tab; the tick boxes change the same settings as /ac set.
+      slash("settings")
+      assert.is_true(ns.ui.settings.isShown())
+      for _, tab in ipairs(ns.ui.settings.TABS) do ns.ui.settings.open(tab) end
+      ns.ui.settings.open("Options")
+      local rowsShown = ns.ui.settings.rows()
+      assert.truthy(#rowsShown >= 1)
+      local parts = ns.ui.settings.parts()
+      parts.search:SetText("quest")
+      rawget(parts.search, "_OnTextChanged")(parts.search)
+      assert.equal("quest", ns.ui.settings.search)
+      local lootRow
+      for _, r in ipairs(rowsShown) do if r.key == "loot_skip_quest" then lootRow = r end end
+      assert.truthy(lootRow)
+      lootRow.check.GetChecked = function() return true end
+      rawget(lootRow.check, "_OnClick")(lootRow.check)
+      assert.is_true(settings.loot_skip_quest)
+      slash("set lootquest off"); assert.is_false(settings.loot_skip_quest)
+      slash("set lootquality uncommon"); assert.equal(2, settings.loot_min_quality)
+      slash("set lootquality all"); assert.equal(0, settings.loot_min_quality)
+
+      -- Report a problem: version and settings, no names, and where to paste it.
+      ns.App.noteError("LOOT_READY", "Interface/AddOns/AdventureChronicler/capture/loot.lua:1: |cffff0000boom|r")
+      slash("report")
+      ns.ui.report.setWhat("The mini recorder didn't show")
+      local report = ns.ui.report.text()
+      assert.truthy(report:find("Adventure Chronicler 0.3.4", 1, true))
+      assert.truthy(report:find("loot.lua:1: boom", 1, true))
+      assert.truthy(report:find("What happened: The mini recorder didn't show", 1, true))
+      assert.is_nil(report:find("Examplechar", 1, true)); assert.is_nil(report:find("Example Realm", 1, true))
+      assert.is_nil(report:find("AC1.", 1, true))
+      assert.equal("https://example.net/invite", ns.ui.report.place())
+
+      -- What's new opens on the newest version, and from Help.
+      slash("whatsnew")
+      assert.is_true(ns.ui.whatsnew.isShown())
+      assert.equal("0.3.4", ns.ui.whatsnew.current().version)
+
+      -- The review window's Filter only hides rows.
+      slash("review")
+      local obsBefore = #s.observations
+      ns.ui.review.filter.types.Notes = true
+      ns.ui.review.refresh()
+      assert.equal(obsBefore, #s.observations)
+      ns.reviewfilter.clear(ns.ui.review.filter)
+
       ns.App.DEFAULT_LINK = ""
-      ns.ui.export.openLink()  -- explains /ac link when there's no address at all
+      ns.COMMUNITY.import_url = ""
+      assert.is_nil(ns.App.link())
+      ns.ui.export.setKind("code")  -- no address at all: the field is empty, nothing breaks
+      assert.equal("", ns.ui.export.pasteAddress())
     end)
   end)
 end)

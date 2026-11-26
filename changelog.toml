@@ -8,6 +8,47 @@
 #                       text = one or two sentences
 
 [[release]]
+version = "0.3.4"
+date = "2026-11-26"
+title = "Settings window, loot filter and What's new"
+status = "prototype"
+
+[[release.change]]
+area = "Export"
+kind = "improved"
+text = "The export window shows two steps: 1. Copy the code, 2. Paste the code at, with the import address in a field to copy. The Open QuestersBoard button and its second window are gone, since add-ons can't open a browser."
+
+[[release.change]]
+area = "Settings"
+kind = "new"
+text = "A settings window (`/ac settings`, or Settings in the Adventure Recorder) with Community, Export, Options and Help tabs and the version in the corner. Options lists every setting as a tick box in categories (Export, Loot, Minimap, Privacy, Recording, Windows), with a search box and Defaults. `/ac set` still works."
+
+[[release.change]]
+area = "Settings"
+kind = "new"
+text = "Loot filter for recording: the lowest item quality to record, and boxes to leave out quest items, trade goods or grey junk. Left-out items are not recorded at all, from then on; nothing already recorded changes. When the game doesn't say an item's type or quality, the item is kept."
+
+[[release.change]]
+area = "Settings"
+kind = "new"
+text = "Community tab: your community's name, its invite to copy and its QuestersBoard address. A community's own build fills these in; anyone can set an invite with `/ac community https://...`."
+
+[[release.change]]
+area = "Review"
+kind = "new"
+text = "A Filter in the review window, like the profession filter: hide entry types (Check all, Uncheck all), loot by quality (Unknown quality for items the game hasn't loaded) and \"seen\" loot you then received. It only hides rows; nothing is deleted and exports keep everything. The button shows how many filters are on, and its red x clears them."
+
+[[release.change]]
+area = "Windows"
+kind = "new"
+text = "Report a problem (Help tab or `/ac report`): a short report to copy with the add-on and game versions, which settings are on and the last error the add-on caught, plus a line you type. No log, import code or names. It says where to paste it: your community's invite, or this project's GitHub issues."
+
+[[release.change]]
+area = "Windows"
+kind = "new"
+text = "What's new (Help tab or `/ac whatsnew`): every version's changes, newest first, with Newer and Older. It opens once after an update; turn that off in Options, Windows."
+
+[[release]]
 version = "0.3.3"
 date = "2026-11-26"
 title = "Mini recorder and compass"

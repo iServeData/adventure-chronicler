@@ -7,7 +7,7 @@ local L = ns.limits
 local App = { loaded = false, warnedFull = false }
 ns.App = App
 
-App.VERSION = "0.3.3"
+App.VERSION = "0.3.4"
 App.DEFAULT_SETTINGS = {
   prompt_on_instance = false,   -- ask (never auto-start) when entering a dungeon or raid
   record_pvp = true,            -- battleground entry/exit/result and own deaths
@@ -19,13 +19,21 @@ App.DEFAULT_SETTINGS = {
   minimap_button = true,        -- the compass button on the minimap (Adventure Recorder, or the mini recorder
                                 -- while a session is open)
   minimap_angle = 200,          -- where that button sits around the minimap, in degrees (drag it to change)
-  questersboard_url = "",       -- your own QuestersBoard address, set with /ac link ("" = App.DEFAULT_LINK)
+  questersboard_url = "",       -- your own import address, set with /ac link ("" = the community's, or the default)
+  community_invite = "",        -- your own community invite, set with /ac community ("" = the build's)
+  -- Loot filter for recording (only when record_personal_loot is on). Left-out items are never recorded.
+  loot_min_quality = 0,         -- 0 Poor (everything) ... 4 Epic
+  loot_skip_quest = false,
+  loot_skip_trade = false,
+  loot_skip_junk = false,
+  whats_new_on_update = true,   -- open What's new once after the add-on is updated
+  last_seen_version = "",       -- the version What's new last opened for ("" = a fresh install: not shown)
 }
 
 App.RETIRED_SETTINGS = { "show_indicator", "indicator_minimized" }
 
--- Where the export window's Open QuestersBoard button points until you set your own with /ac link.
--- A placeholder: no real community address is shipped in the add-on.
+-- Where the export window says to paste the code when neither you (/ac link) nor the build
+-- (core/community.lua) set an address. A placeholder: the public source ships no community address.
 App.DEFAULT_LINK = "https://example.com/import"
 
 -- Accepts only a plain https:// address (no spaces, quotes or WoW escape codes), up to 200 characters.
@@ -38,20 +46,62 @@ function App.validLink(url)
   return url
 end
 
--- The address the button shows: yours if set and valid, otherwise the default.
+local function community() return ns.COMMUNITY or {} end
+
+-- The address the export window shows: yours if set and valid, then the community build's, then the default.
 function App.link()
-  return App.validLink(App.settings and App.settings.questersboard_url) or App.validLink(App.DEFAULT_LINK)
+  return App.validLink(App.settings and App.settings.questersboard_url) or App.validLink(community().import_url)
+    or App.validLink(App.DEFAULT_LINK)
+end
+
+-- The community invite: yours (/ac community) if set, otherwise the build's. nil when there is none.
+function App.invite()
+  return App.validLink(App.settings and App.settings.community_invite) or App.validLink(community().invite)
+end
+
+-- Where Report a problem says to paste the report: the community invite, otherwise the issue page.
+function App.reportPlace()
+  return App.invite(), App.validLink(community().issues_url)
+end
+
+function App.setInvite(url)
+  if url == nil or url == "" then
+    local own = App.validLink(App.settings.community_invite)
+    App.print("Community invite: " .. (App.invite() or "none") .. (own and "" or " (from the add-on)"))
+    return
+  end
+  if url == "clear" or url == "off" or url == "default" then
+    App.settings.community_invite = ""
+    App.print("Community invite is back to the add-on's: " .. (App.invite() or "none"))
+    return
+  end
+  local ok = App.validLink(url)
+  if not ok then
+    App.print("That doesn't look like an https:// address. Example: /ac community https://example.com/invite")
+    return
+  end
+  App.settings.community_invite = ok
+  App.print("Community invite set to " .. ok)
+  App.refresh()
+end
+
+-- The last error the add-on itself caught (kept until /reload or logout, never saved). Report a problem
+-- shows it.
+App.lastError = nil
+function App.noteError(where, err)
+  App.lastError = { where = tostring(where), message = tostring(err), t = App.now and App.now() or 0 }
+  if App.debug then App.print("error in " .. tostring(where) .. ": " .. tostring(err)) end
 end
 
 function App.setLink(url)
   if url == nil or url == "" then
     local own = App.validLink(App.settings.questersboard_url)
-    App.print("QuestersBoard address: " .. (App.link() or "none") .. (own and "" or " (the default)"))
+    App.print("Import address: " .. (App.link() or "none") .. (own and "" or " (the add-on's)"))
     return
   end
   if url == "clear" or url == "off" or url == "default" then
     App.settings.questersboard_url = ""
-    App.print("QuestersBoard address is back to the default: " .. (App.link() or "none"))
+    App.print("Import address is back to the add-on's: " .. (App.link() or "none"))
     return
   end
   local ok = App.validLink(url)
@@ -60,7 +110,8 @@ function App.setLink(url)
     return
   end
   App.settings.questersboard_url = ok
-  App.print("QuestersBoard address set to " .. ok)
+  App.print("Import address set to " .. ok)
+  App.refresh()
 end
 
 local api = _G
@@ -90,6 +141,10 @@ function App.load()
   local acct = api.AdventureChroniclerDB
   acct.schema = acct.schema or 1
   acct.settings = type(acct.settings) == "table" and acct.settings or {}
+  -- Settings from before 0.3.4 have no last_seen_version: that's an update, so What's new shows once.
+  if acct.settings.last_seen_version == nil and next(acct.settings) ~= nil then
+    acct.settings.last_seen_version = "older"
+  end
   for k, v in pairs(App.DEFAULT_SETTINGS) do if acct.settings[k] == nil then acct.settings[k] = v end end
   -- Retired in 0.3.3: the small tab and /ac set indicator hide (closing the mini recorder does that now).
   for _, k in ipairs(App.RETIRED_SETTINGS) do acct.settings[k] = nil end
@@ -110,6 +165,7 @@ function App.recover()
       App.print("Recording continues (" .. s.state .. ").")
     end
   end
+  App.checkWhatsNew()
   App.refresh()
 end
 
@@ -122,6 +178,7 @@ function App.refresh()
   if ns.ui and ns.ui.minimap then ns.ui.minimap.update() end
   if ns.ui and ns.ui.review and ns.ui.review.refresh then ns.ui.review.refresh() end
   if ns.ui and ns.ui.recorder and ns.ui.recorder.refresh then ns.ui.recorder.refresh() end
+  if ns.ui and ns.ui.settings and ns.ui.settings.refresh then ns.ui.settings.refresh() end
 end
 
 -- Capture modules call this. Records only while a session is recording (markers also while paused).
@@ -289,6 +346,43 @@ end
 
 function App.review()
   if ns.ui and ns.ui.review then ns.ui.review.open() end
+end
+
+function App.settingsWindow(tab)
+  if ns.ui and ns.ui.settings then ns.ui.settings.open(tab) end
+end
+
+function App.whatsNew(version)
+  if ns.ui and ns.ui.whatsnew then ns.ui.whatsnew.open(version) end
+end
+
+-- After an update (not on a fresh install), open What's new once, unless that's turned off.
+-- Returns true if it opened.
+function App.checkWhatsNew()
+  local seen = App.settings.last_seen_version
+  App.settings.last_seen_version = App.VERSION
+  if seen == nil or seen == "" or seen == App.VERSION then return false end
+  if App.settings.whats_new_on_update ~= true then return false end
+  App.whatsNew(App.VERSION)
+  return true
+end
+
+function App.reportProblem()
+  if ns.ui and ns.ui.report then ns.ui.report.open() end
+end
+
+-- What Report a problem lists. Nothing identifying: no log, import code or names.
+function App.reportInfo(what)
+  local version, build, _, interface = api.GetBuildInfo()
+  local s = S.active(App.db)
+  local I = ns.ui and ns.ui.indicator
+  return {
+    version = App.VERSION, client = { version = version, build = build, interface = interface },
+    session = s and { state = s.state, recorded = S.recordedSeconds(s, App.now()) } or nil,
+    mini_shown = I and I.frames and (function() local f = I.frames(); return f ~= nil and f:IsShown() == true end)()
+      or false,
+    settings = App.settings, last_error = App.lastError, what = what,
+  }
 end
 
 function App.recorder()

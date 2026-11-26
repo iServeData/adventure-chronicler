@@ -38,14 +38,16 @@ frame:SetScript("OnEvent", function(_, event, ...)
   for _, fn in ipairs(list) do
     -- One module failing must never break the others or the player's UI.
     local ok, err = pcall(fn, App.ctx, ...)
-    if not ok and App.debug then App.print("error in " .. event .. ": " .. tostring(err)) end
+    if not ok then App.noteError(event, err) end
   end
   if event ~= "BAG_UPDATE_DELAYED" then App.refresh() end
 end)
 
 -- The reward choice is only known when the player clicks "Complete Quest".
 hooksecurefunc("GetQuestReward", function(choiceIndex)
-  if App.loaded then pcall(ns.capture.quests.onGetQuestReward, App.ctx, choiceIndex) end
+  if not App.loaded then return end
+  local ok, err = pcall(ns.capture.quests.onGetQuestReward, App.ctx, choiceIndex)
+  if not ok then App.noteError("GetQuestReward", err) end
 end)
 
 -- Keep last_seen fresh so a crash (no logout event) still leaves an honest gap estimate.

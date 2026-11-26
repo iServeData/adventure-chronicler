@@ -59,8 +59,8 @@ Setup: install as in [install.md](install.md). Turn on Lua errors with `/console
 | 30 | With an export window open, press Add note | The note window opens on top of the export window |
 | 31 | In the export window, click Markdown, Text, JSON, then Import code | Each shows its copy and a suggested file name; the chosen format is highlighted. Import code still validates |
 | 32 | Copy the Markdown into a new `.md` file and open it | Title, details, timeline and your notes in full. No character name unless turned on |
-| 33 | Press Open QuestersBoard before setting an address | It shows `https://example.com/import`, selected |
-| 34 | `/ac link http://example.org`, then `/ac link https://example.org`, press the button, then `/ac link clear` | The http address is refused. The https one shows selected and Ctrl+C copies it. After clear, the default is back |
+| 33 | Open the export window before setting an address | "2. Paste the code at:" shows the community's import page (public build: `https://example.com/import`); clicking the field selects it |
+| 34 | `/ac link http://example.org`, then `/ac link https://example.org`, look at the export window, then `/ac link clear` | The http address is refused. The https one shows selected and Ctrl+C copies it. After clear, the default is back |
 | 35 | In `/ac review`, pick a stopped session, click its title (or Rename), type a new name and press Enter; then try Escape on another | The new name shows in the list and the header, and in a new export. Escape keeps the old name |
 | 36 | While recording, use each small button under REC: Note, Bookmark, Pause (then Resume), Export, Review, Stop | Each does the same as its command. Pause turns into Resume and back. Stop asks first. `/ac set buttons off` hides the row and `on` brings it back |
 | 37 | While recording, accept a quest with a kill or collect objective | "Accepted <quest> (1 objective)". The export's `quest.accepted` has the objective text and the summary, and no `description` |
@@ -81,5 +81,14 @@ Setup: install as in [install.md](install.md). Turn on Lua errors with `/console
 | 52 | With `/ac set loot on`, loot several corpses (with and without auto loot), then export | One `loot.seen` per corpse, not two |
 | 53 | Turn in a quest with a reward you've never seen before | The reward window line names the items, or the name appears within a few seconds in review and the export |
 | 54 | On WoW Forever, accept The Corrupter (or any quest whose objectives were missing in 0.3.2), then export | `quest.accepted` has its objectives, filled in within about 10 seconds; still one Accepted line in the log (0.3.3) |
+| 55 | Update from 0.3.3 and log in; then `/reload` | What's new opens once, on 0.3.4. Newer/Older page through versions. After the reload it doesn't open again (0.3.4) |
+| 56 | `/ac settings`; click each tab (Community, Export, Options, Help) and each Options category | The version shows next to the close button. Categories run A-Z. Tick boxes change the setting at once and survive `/reload` |
+| 57 | On Options, type "quest" in the search box, then clear it | Only matching settings show, from every category; clearing brings the category list back |
+| 58 | Change some Loot settings, then press Defaults | Only that category goes back to its defaults |
+| 59 | With loot on, set lowest quality to Uncommon and tick "Leave out trade goods" and "Leave out junk you sell to vendors"; loot corpses with grey, white, trade good and quest items, then export | Only Uncommon and better, and quest items, are in `loot.seen`. Tick "Leave out quest items" and quest items go too. Note whether any item's quality or type was missing |
+| 60 | In `/ac review`, open Filter on a session with loot: untick types, untick qualities, tick Hide "seen" if received, then press the red x | The badge counts the filters and the header says "showing X of Y". The red x clears them all. After `/reload` the filter is clear |
+| 61 | `/ac report`; type more than 200 letters; copy the report | The counter stops at 200. The report has versions, recording state, settings and last error, and no names. "3. Paste it at:" shows the community invite (public build: the issue page) |
+| 62 | Settings > Community in the community build | The community's name and the addresses from its community file, and no host listed in `forbid_hosts`; each field copies with Ctrl+C |
+| 63 | Settings > Export: save your own address, then press "Use the add-on's" | The export window follows each change |
 
 Record the results in a copy of this table and add a summary to [test_results.md](test_results.md). Don't commit real exports or saved data.

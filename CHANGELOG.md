@@ -2,6 +2,16 @@
 
 Built from `changelog.toml` by `tools/build_changelog.py`; edit that file, not this one.
 
+## 0.3.4 · 2026-11-26 · Settings window, loot filter and What's new (prototype, unreleased)
+
+- **Improved** (Export): The export window shows two steps: 1. Copy the code, 2. Paste the code at, with the import address in a field to copy. The Open QuestersBoard button and its second window are gone, since add-ons can't open a browser.
+- **New** (Settings): A settings window (`/ac settings`, or Settings in the Adventure Recorder) with Community, Export, Options and Help tabs and the version in the corner. Options lists every setting as a tick box in categories (Export, Loot, Minimap, Privacy, Recording, Windows), with a search box and Defaults. `/ac set` still works.
+- **New** (Settings): Loot filter for recording: the lowest item quality to record, and boxes to leave out quest items, trade goods or grey junk. Left-out items are not recorded at all, from then on; nothing already recorded changes. When the game doesn't say an item's type or quality, the item is kept.
+- **New** (Settings): Community tab: your community's name, its invite to copy and its QuestersBoard address. A community's own build fills these in; anyone can set an invite with `/ac community https://...`.
+- **New** (Review): A Filter in the review window, like the profession filter: hide entry types (Check all, Uncheck all), loot by quality (Unknown quality for items the game hasn't loaded) and "seen" loot you then received. It only hides rows; nothing is deleted and exports keep everything. The button shows how many filters are on, and its red x clears them.
+- **New** (Windows): Report a problem (Help tab or `/ac report`): a short report to copy with the add-on and game versions, which settings are on and the last error the add-on caught, plus a line you type. No log, import code or names. It says where to paste it: your community's invite, or this project's GitHub issues.
+- **New** (Windows): What's new (Help tab or `/ac whatsnew`): every version's changes, newest first, with Newer and Older. It opens once after an update; turn that off in Options, Windows.
+
 ## 0.3.3 · 2026-11-26 · Mini recorder and compass (prototype, unreleased)
 
 - **Improved** (Windows): Closing the Adventure Recorder while recording now leaves the mini recorder (REC or PAUSED, the time and the small buttons) on screen. With no session open, closing it leaves only the compass on the minimap.

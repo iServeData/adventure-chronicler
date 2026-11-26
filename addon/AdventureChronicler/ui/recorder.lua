@@ -158,14 +158,19 @@ local function build()
     if s and s.state == "paused" then ns.App.resume() else ns.App.pause() end
   end)
   links.mark = W.link(f, "Bookmark", function() ns.App.mark("") end)
-  links.review = W.link(f, "Review all", function() ns.App.review() end)
+  links.review = W.link(f, "Review", function() ns.App.review() end)
+  links.settings = W.link(f, "Settings", function() ns.App.settingsWindow() end)
   links.sep1 = W.text(f, "body", 12, W.MUTED); links.sep1:SetText("·")
   links.sep2 = W.text(f, "body", 12, W.MUTED); links.sep2:SetText("·")
-  links.mark:SetPoint("BOTTOM", 0, 42)
+  links.sep3 = W.text(f, "body", 12, W.MUTED); links.sep3:SetText("·")
+  -- Pause · Bookmark · Review · Settings, centred on the middle dot; with no session, Review · Settings.
+  links.sep2:SetPoint("BOTTOM", 0, 44)
+  links.mark:SetPoint("RIGHT", links.sep2, "LEFT", -4, 0)
   links.sep1:SetPoint("RIGHT", links.mark, "LEFT", -4, 0)
   links.pause:SetPoint("RIGHT", links.sep1, "LEFT", -4, 0)
-  links.sep2:SetPoint("LEFT", links.mark, "RIGHT", 4, 0)
   links.review:SetPoint("LEFT", links.sep2, "RIGHT", 4, 0)
+  links.sep3:SetPoint("LEFT", links.review, "RIGHT", 4, 0)
+  links.settings:SetPoint("LEFT", links.sep3, "RIGHT", 4, 0)
 
   -- Footer between two short rules.
   footer = W.text(f, "body", 11, W.MUTED)
@@ -222,11 +227,18 @@ function R.refresh()
   buttons.start:SetShown(not open)
   buttons.note:SetShown(open); buttons.stop:SetShown(open); buttons.export:SetShown(open)
   links.pause:SetShown(open); links.mark:SetShown(open)
-  links.sep1:SetShown(open); links.sep2:SetShown(open)
+  links.sep1:SetShown(open)
   links.pause:SetText(s and s.state == "paused" and "Resume" or "Pause")
   links.review:ClearAllPoints()
   if open then links.review:SetPoint("LEFT", links.sep2, "RIGHT", 4, 0)
-  else links.review:SetPoint("BOTTOM", f, "BOTTOM", 0, 42) end
+  else links.review:SetPoint("RIGHT", links.sep2, "LEFT", -4, 0) end
+  links.sep3:ClearAllPoints()
+  if open then links.sep3:SetPoint("LEFT", links.review, "RIGHT", 4, 0)
+  else links.sep3:Hide() end
+  links.sep3:SetShown(open)
+  links.settings:ClearAllPoints()
+  if open then links.settings:SetPoint("LEFT", links.sep3, "RIGHT", 4, 0)
+  else links.settings:SetPoint("LEFT", links.sep2, "RIGHT", 4, 0) end
 
   footer:SetText(App.settings.include_identity and "Character name included in exports"
     or "Chat and other players never recorded")

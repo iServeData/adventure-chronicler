@@ -1,15 +1,100 @@
 -- Adventure Chronicler: review window. Lists sessions, shows a session's timeline and notes, and lets
 -- the player delete a whole session, a single observation or a note. Nothing is sent anywhere.
+-- The Filter only hides rows from view (core/reviewfilter.lua); nothing is deleted and exports keep everything.
 local _, ns = ...
 ns = ns or {}
 ns.ui = ns.ui or {}
 
 local R = { selected = nil, page = 1 }
+R.filter = ns.reviewfilter and ns.reviewfilter.new() or { types = {}, qualities = {} }
 ns.ui.review = R
 
 local PAGE = 60
 local f, list, listChild, timeline, timelineChild, header, pageLabel, titleBox, titleInput, renameLink
 local sessionRows, lineRows = {}, {}
+local filterButton, filterClear, filterPanel
+local filterChecks = {}
+
+-- Item quality from the game's item data on this computer; nil if the game hasn't loaded the item yet.
+function R.qualityOf(itemID)
+  local fn = (C_Item and C_Item.GetItemQualityByID)
+  if fn then
+    local ok, q = pcall(fn, itemID)
+    if ok and type(q) == "number" then return q end
+  end
+  local info = (C_Item and C_Item.GetItemInfo) or _G.GetItemInfo
+  if info then
+    local ok, _, _, q = pcall(info, itemID)
+    if ok and type(q) == "number" then return q end
+  end
+  return nil
+end
+
+local function refreshFilterButton()
+  if not filterButton then return end
+  local n = ns.reviewfilter.count(R.filter)
+  filterButton:SetText(n > 0 and ("Filter |cffffd100(" .. n .. ")|r") or "Filter")
+  filterClear:SetShown(n > 0)
+  for _, c in ipairs(filterChecks) do c:SetChecked(c.get()) end
+end
+
+local function buildFilter()
+  local Wd, F = ns.ui.widgets, ns.reviewfilter
+  filterButton = Wd.button(f, "Filter", 92, function()
+    if filterPanel:IsShown() then filterPanel:Hide() else filterPanel:Show() end
+  end, "dark", 22)
+  filterButton:SetPoint("TOPRIGHT", -44, -38)
+  -- The red x clears every filter, like the profession window's.
+  filterClear = CreateFrame("Button", nil, filterButton)
+  filterClear:SetSize(16, 16)
+  filterClear:SetPoint("CENTER", filterButton, "TOPRIGHT", -2, -2)
+  filterClear:SetNormalTexture("Interface\\Buttons\\UI-StopButton")
+  filterClear:SetScript("OnClick", function() F.clear(R.filter); R.page = 1; R.refresh() end)
+
+  filterPanel = CreateFrame("Frame", nil, f)
+  filterPanel:SetFrameStrata("FULLSCREEN_DIALOG")
+  filterPanel:SetSize(300, 330)
+  filterPanel:SetPoint("TOPRIGHT", filterButton, "BOTTOMRIGHT", 0, -4)
+  local bg = filterPanel:CreateTexture(nil, "BACKGROUND")
+  bg:SetAllPoints(); bg:SetTexture(Wd.media("frame_bg"))
+  Wd.goldBorder(filterPanel, 0)
+  filterPanel:Hide()
+  local function add(label, colour, get, set, x, y)
+    local c = Wd.check(filterPanel, label, function(on) set(on); R.page = 1; R.refresh() end, colour)
+    c:SetPoint("TOPLEFT", x, y)
+    c.get = get
+    filterChecks[#filterChecks + 1] = c
+    return c
+  end
+  add("Hide \"seen\" if received", nil, function() return R.filter.hide_seen_received end,
+    function(on) R.filter.hide_seen_received = on end, 12, -10)
+  local show = Wd.text(filterPanel, "body", 11, Wd.MUTED)
+  show:SetPoint("TOPLEFT", 16, -44); show:SetText("SHOW")
+  local function setAll(on) for _, t in ipairs(F.TYPES) do R.filter.types[t] = (not on) or nil end end
+  local all = Wd.link(filterPanel, "Check all", function() setAll(true); R.refresh() end)
+  all:SetPoint("LEFT", show, "RIGHT", 12, 0)
+  local none = Wd.link(filterPanel, "Uncheck all", function() setAll(false); R.refresh() end)
+  none:SetPoint("LEFT", all, "RIGHT", 8, 0)
+  for i, t in ipairs(F.TYPES) do
+    local col, row = (i - 1) % 2, math.floor((i - 1) / 2)
+    add(t, nil, function() return not R.filter.types[t] end,
+      function(on) R.filter.types[t] = (not on) or nil end, 12 + col * 140, -60 - row * 24)
+  end
+  local ql = Wd.text(filterPanel, "body", 11, Wd.MUTED)
+  ql:SetPoint("TOPLEFT", 16, -190); ql:SetText("LOOT QUALITY")
+  for i, q in ipairs(F.QUALITIES) do
+    local col, row = (i - 1) % 2, math.floor((i - 1) / 2)
+    local name = q == "unknown" and "Unknown quality" or ns.options.QUALITY[q]
+    local hex = q == "unknown" and "a89880" or ns.options.QUALITY_COLOUR[q]
+    local colour = { tonumber(hex:sub(1, 2), 16) / 255, tonumber(hex:sub(3, 4), 16) / 255,
+                     tonumber(hex:sub(5, 6), 16) / 255 }
+    add(name, colour, function() return not R.filter.qualities[q] end,
+      function(on) R.filter.qualities[q] = (not on) or nil end, 12 + col * 140, -206 - row * 24)
+  end
+  local note = Wd.text(filterPanel, "body", 10, Wd.MUTED)
+  note:SetPoint("BOTTOMLEFT", 14, 10); note:SetPoint("RIGHT", -14, 0); note:SetJustifyH("LEFT")
+  note:SetText("Only hides rows here. Nothing is deleted; exports keep everything.")
+end
 
 local function W() return ns.ui.widgets end
 
@@ -42,7 +127,7 @@ local function build()
 
   header = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
   header:SetPoint("TOPLEFT", 262, -42)
-  header:SetPoint("RIGHT", -96, 0)
+  header:SetPoint("RIGHT", -196, 0)
   header:SetJustifyH("LEFT")
   header:SetWordWrap(false)
 
@@ -50,7 +135,7 @@ local function build()
   -- session, stopped or not. Only the title changes; observations and notes stay as they are.
   titleBox = W().parchment(f)
   titleBox:SetPoint("TOPLEFT", 258, -36)
-  titleBox:SetPoint("TOPRIGHT", -92, -36)
+  titleBox:SetPoint("TOPRIGHT", -192, -36)
   titleBox:SetHeight(26)
   titleBox:Hide()
   titleInput = CreateFrame("EditBox", nil, titleBox)
@@ -80,11 +165,12 @@ local function build()
   R.startRename = startRename
   local clickTitle = CreateFrame("Button", nil, f)
   clickTitle:SetPoint("TOPLEFT", 258, -38)
-  clickTitle:SetPoint("TOPRIGHT", -96, -38)
+  clickTitle:SetPoint("TOPRIGHT", -196, -38)
   clickTitle:SetHeight(22)
   clickTitle:SetScript("OnClick", startRename)
   renameLink = W().link(f, "Rename", startRename)
-  renameLink:SetPoint("TOPRIGHT", -44, -40)
+  renameLink:SetPoint("TOPRIGHT", -142, -40)
+  buildFilter()
 
   timeline = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
   timeline:SetPoint("TOPLEFT", 262, -64)
@@ -153,7 +239,12 @@ function R.refresh()
   header:SetText(string.format("%s  |cffcccccc%s, recorded %s%s%s|r", s.title ~= "" and s.title or "Untitled",
     s.state, recorded, s.interrupted and ", interrupted" or "",
     s.counters.dropped > 0 and (", " .. s.counters.dropped .. " not kept (full)") or ""))
-  local entries = R.entries(s)
+  local all = R.entries(s)
+  local entries, total = ns.reviewfilter.apply(all, R.filter, R.qualityOf)
+  refreshFilterButton()
+  if #entries ~= total then
+    header:SetText(header:GetText() .. string.format("  |cffa89880showing %d of %d|r", #entries, total))
+  end
   local pages = math.max(1, math.ceil(#entries / PAGE))
   R.page = math.min(R.page, pages)
   pageLabel:SetText(R.page .. " / " .. pages)

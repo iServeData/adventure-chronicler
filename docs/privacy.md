@@ -23,7 +23,7 @@ recording. After a long gap the session is paused until you resume it.
 | The quest giver's full quest text | **Off** (`/ac set questtext on`). Left out of exports unless it's on when you export |
 | Quest reward window, reward chosen, quest turned in, reward items that appear in your bags | On |
 | Battleground entry, result and exit, and your own deaths | On (`/ac set pvp off`) |
-| Items shown in your own loot window | **Off** (`/ac set loot on`) |
+| Items shown in your own loot window | **Off** (`/ac set loot on`). The loot filter (lowest quality, quest items, trade goods, grey items) decides what is recorded: items it leaves out are never saved, so they can't be exported later. Items whose quality or type the game doesn't say are kept |
 | Your notes, bookmarks and screenshot markers (not the images) | When you add them |
 
 ## What it never records
@@ -40,6 +40,13 @@ Battle.net identifiers, the combat log, your location coordinates, or anything a
 | Game client version, build and locale | Included, to help with compatibility |
 
 Before you copy it, the export dialog says whether your name is included.
+
+## Report a problem
+
+`/ac report` builds a short text for you to copy and paste yourself: the add-on and game versions, whether a
+session is recording and for how long, which settings are on, the last error the add-on caught (colour codes
+removed, at most 200 characters) and what you type. It never includes your character name, realm, exports or
+session contents, and nothing is sent anywhere.
 
 ## Screenshots
 

@@ -3,7 +3,7 @@
 --   Import code  for the QuestersBoard import form (the only form QuestersBoard reads)
 --   Markdown, Text, JSON  readable copies to keep as a file
 -- WoW doesn't let add-ons write files or open a browser, so "save to file" means paste into a new
--- file (a file name is suggested), and the QuestersBoard button shows the address to copy.
+-- file (a file name is suggested), and the import code shows the address to paste it at, to copy.
 local _, ns = ...
 ns = ns or {}
 ns.ui = ns.ui or {}
@@ -11,34 +11,51 @@ ns.ui = ns.ui or {}
 local X = {}
 ns.ui.export = X
 
-local f, edit, info, hint, text, session, kind
+local f, edit, info, hint, text, session, kind, scroll, sel
 local tabs = {}
-local linkWin, linkEdit, linkInfo, linkText
+local step1, step2, pasteBox, pasteNote
 
 local HINT = {
-  code = "For the QuestersBoard import form. Copy it, then use the QuestersBoard button to open the page.",
   markdown = "Readable copy. To keep it as a file, paste into a new file and save it as:",
   text = "Plain text copy. To keep it as a file, paste into a new file and save it as:",
   json = "The data as indented JSON (not an import code). To keep it, paste into a new file and save it as:",
 }
+
+-- The import code shows the two steps (copy it, paste it at the address); the other formats show the
+-- file name to save them under.
+local function layout(isCode)
+  step1:SetShown(isCode); step2:SetShown(isCode); pasteBox:SetShown(isCode); pasteNote:SetShown(isCode)
+  hint:SetShown(not isCode)
+  scroll:ClearAllPoints()
+  scroll:SetPoint("TOPLEFT", 16, isCode and -128 or -138)
+  scroll:SetPoint("BOTTOMRIGHT", -34, isCode and 112 or 50)
+  sel:SetText(isCode and "Select code" or "Select all")
+  if isCode then
+    local url = ns.App.link()
+    pasteBox:SetValue(url or "")
+    pasteNote:SetText("Click the address and press Ctrl+C (Cmd+C on Mac), then paste it in your browser.\n"
+      .. "Change it in Settings (Export tab) or with |cffffd100/ac link|r.")
+  end
+end
 
 local function setKind(k)
   local F = ns.ExportFormats
   local out, nameOrWhy, size = F.render(k, session, ns.App.settings, ns.App.VERSION)
   if not out then
     if k ~= "code" then setKind("code") end
+    hint:Show()
     if nameOrWhy == "too_large" then
       hint:SetText(string.format("|cffff6060This format is too large to show (%d KB).|r",
         math.ceil((size or 0) / 1024)))
     else
-      hint:SetText("|cffff6060This format couldn't be made. Please report this with /ac version.|r")
+      hint:SetText("|cffff6060This format couldn't be made. Please report this with /ac report.|r")
     end
     return
   end
   kind = k
   for key, b in pairs(tabs) do ns.ui.widgets.restyle(b, key == k and "gold" or "dark") end
-  if k == "code" then hint:SetText(HINT.code .. "\nFile name if you keep it: |cffffd100" .. nameOrWhy .. "|r")
-  else hint:SetText(HINT[k] .. "\n|cffffd100" .. nameOrWhy .. "|r") end
+  layout(k == "code")
+  if k ~= "code" then hint:SetText(HINT[k] .. "\n|cffffd100" .. nameOrWhy .. "|r") end
   text = out
   edit:SetText(text)
   edit:SetCursorPosition(0)
@@ -46,59 +63,9 @@ local function setKind(k)
   edit:HighlightText()
 end
 
-local function buildLink()
-  local W = ns.ui.widgets
-  linkWin = W.window("AdventureChroniclerLink", "Open QuestersBoard", 440, 170, {})
-  linkWin:SetFrameStrata("FULLSCREEN_DIALOG")
-  linkWin:SetFrameLevel((tonumber(f:GetFrameLevel()) or 1) + 20)
-  linkInfo = linkWin:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-  linkInfo:SetPoint("TOPLEFT", 18, -42)
-  linkInfo:SetPoint("RIGHT", -16, 0)
-  linkInfo:SetJustifyH("LEFT")
-  local box = W.parchment(linkWin)
-  box:SetPoint("TOPLEFT", 16, -88)
-  box:SetPoint("TOPRIGHT", -16, -88)
-  box:SetHeight(30)
-  linkEdit = CreateFrame("EditBox", nil, box)
-  linkEdit:SetAutoFocus(false)
-  linkEdit:SetHeight(22)
-  linkEdit:SetPoint("LEFT", 8, 0)
-  linkEdit:SetPoint("RIGHT", -8, 0)
-  linkEdit:SetFontObject(ChatFontNormal)
-  linkEdit:SetTextColor(W.INK[1], W.INK[2], W.INK[3])
-  -- Read-only, like the export text.
-  linkEdit:SetScript("OnTextChanged", function(self, user)
-    if user then self:SetText(linkText); self:HighlightText() end
-  end)
-  linkEdit:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
-  linkEdit:SetScript("OnEscapePressed", function() linkWin:Hide() end)
-  local close = W.button(linkWin, "Close", 80, function() linkWin:Hide() end)
-  close:SetPoint("BOTTOMRIGHT", -18, 14)
-end
-
-local function openLink()
-  if not linkWin then buildLink() end
-  local url = ns.App.link()
-  if url then
-    linkText = url
-    linkInfo:SetText("WoW add-ons can't open a browser. Press Ctrl+C (Cmd+C on Mac) to copy this address,\n"
-      .. "then paste it into your browser. Copy the import code first if you haven't yet.")
-    linkEdit:GetParent():Show()
-  else
-    linkText = ""
-    linkInfo:SetText("No QuestersBoard address is set yet. Type this in chat, using your community's address:\n"
-      .. "|cffffd100/ac link https://your-questersboard-address|r\nIt's saved with your settings on this computer.")
-    linkEdit:GetParent():Hide()
-  end
-  linkEdit:SetText(linkText)
-  linkWin:Show()
-  linkWin:Raise()
-  if url then linkEdit:SetFocus(); linkEdit:HighlightText() end
-end
-
 local function build()
   local W = ns.ui.widgets
-  f = W.window("AdventureChroniclerExport", "Adventure Chronicler: export", 540, 400, { compass = true })
+  f = W.window("AdventureChroniclerExport", "Adventure Chronicler: export", 540, 430, { compass = true })
   -- Sits above the review window so its rows never show through. The note window shares this layer, and
   -- whichever of the two was opened or clicked last is on top.
   f:SetFrameStrata("FULLSCREEN_DIALOG")
@@ -125,33 +92,45 @@ local function build()
   hint:SetPoint("RIGHT", -16, 0)
   hint:SetJustifyH("LEFT")
 
-  local scroll
+  step1 = W.text(f, "body", 13, W.GOLD)
+  step1:SetPoint("TOPLEFT", 18, -108)
+  step1:SetText("1. Copy the code  |cffa89880Ctrl+A, then Ctrl+C (Cmd on Mac)|r")
+
   scroll, edit = W.multiline(f)
-  scroll:SetPoint("TOPLEFT", 16, -138)
-  scroll:SetPoint("BOTTOMRIGHT", -34, 50)
   -- Read-only: typing restores the original text so the copied export is always intact.
   edit:SetScript("OnTextChanged", function(self, user) if user then self:SetText(text); self:HighlightText() end end)
   edit:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
+
+  step2 = W.text(f, "body", 13, W.GOLD)
+  step2:SetPoint("BOTTOMLEFT", 18, 90)
+  step2:SetText("2. Paste the code at:")
+  pasteBox = W.readonly(f, 26)
+  pasteBox:SetPoint("LEFT", step2, "RIGHT", 10, 0)
+  pasteBox:SetPoint("RIGHT", f, "RIGHT", -18, 0)
+  pasteNote = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  pasteNote:SetPoint("TOPLEFT", step2, "BOTTOMLEFT", 0, -10)
+  pasteNote:SetPoint("RIGHT", -16, 0)
+  pasteNote:SetJustifyH("LEFT")
+
   local close = W.button(f, "Close", 80, function() f:Hide() end)
   close:SetPoint("BOTTOMRIGHT", -18, 16)
-  local sel = W.button(f, "Select all", 90, function() edit:SetFocus(); edit:HighlightText() end, "gold")
+  sel = W.button(f, "Select code", 100, function() edit:SetFocus(); edit:HighlightText() end, "gold")
   sel:SetPoint("RIGHT", close, "LEFT", -6, 0)
-  local qb = W.button(f, "Open QuestersBoard", 150, openLink)
-  qb:SetPoint("BOTTOMLEFT", 18, 16)
-  f:SetScript("OnHide", function() if linkWin then linkWin:Hide() end end)
 end
 
-X.openLink = function() if f then openLink() end end
 X.setKind = function(k) if f and session then setKind(k) end end
+X.pasteAddress = function() return pasteBox and pasteBox.value end
+X.refresh = function() if f and f:IsShown() and kind == "code" then layout(true) end end
 
 -- exportText is the import code App.export already checked; the other formats are made on demand.
 function X.open(exportText, s)
   if not f then build() end
   session = s
   local sum = ns.Export.summary(s)
-  info:SetText(string.format("%d observations, %d notes (import code %.1f KB). Ctrl+C (Cmd+C on Mac) copies.\n"
-    .. "Contains no chat or other players. Character name is %s.", sum.observations, sum.notes, #exportText / 1024,
-    ns.App.settings.include_identity and "|cffffd100included|r" or "not included"))
+  local name = s.title ~= nil and s.title ~= "" and ("|cffd6ab5c" .. s.title .. "|r · ") or ""
+  info:SetText(string.format("%s%d observations, %d notes (%.1f KB)\n"
+    .. "Contains no chat or other players. Character name is %s.", name, sum.observations, sum.notes,
+    #exportText / 1024, ns.App.settings.include_identity and "|cffffd100included|r" or "not included"))
   f:Show()
   f:Raise()
   setKind(kind or "code")

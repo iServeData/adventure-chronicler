@@ -44,8 +44,13 @@ or a Markdown, text or HTML file.
 | `/ac stop` | End the session |
 | `/ac review` | Review, edit or delete sessions, notes and events |
 | `/ac export` | Show the latest session to copy: the import code for QuestersBoard, or Markdown, Text or JSON to keep as a file |
-| `/ac link <https://...>` | Set the address the export window's Open QuestersBoard button shows. It starts as the placeholder `https://example.com/import`; `/ac link clear` goes back to it |
-| `/ac options`, `/ac set <setting> on\|off` | Show or change settings (`prompt`, `pvp`, `loot`, `identity`, `classlevel`, `buttons`, `questtext`). `questtext` (off by default) also keeps the quest giver's full text. `buttons` shows or hides the small Open, Note, Bookmark, Pause, Stop, Export and Review buttons on the mini recorder. `minimap off\|on` hides or shows the minimap button |
+| `/ac link <https://...>` | Set the address the export window says to paste the code at. It starts as your community's address (or the placeholder `https://example.com/import` in the public build); `/ac link clear` goes back to it |
+| `/ac settings` (or `/ac options`) | Open the Settings window: Community, Export, Options (searchable, by category) and Help |
+| `/ac community <https://...>` | Set the invite shown on the Community tab and in Report a problem; `/ac community clear` goes back to the add-on's |
+| `/ac report` | Report a problem: a short report to copy, with versions, settings and the last error the add-on caught. No names |
+| `/ac whatsnew` | Show what changed in each version. It also opens once after an update (`/ac set whatsnew off` to stop that) |
+| `/ac set lootquality all\|common\|uncommon\|rare\|epic` | Lowest loot quality recorded. `/ac set lootquest`, `loottrade` and `lootjunk on\|off` leave out quest items, trade goods and grey items |
+| `/ac set <setting> on\|off` | Change settings (`prompt`, `pvp`, `loot`, `identity`, `classlevel`, `buttons`, `questtext`). `questtext` (off by default) also keeps the quest giver's full text. `buttons` shows or hides the small Open, Note, Bookmark, Pause, Stop, Export and Review buttons on the mini recorder. `minimap off\|on` hides or shows the minimap button |
 
 If another addon already uses `/ac`, use `/advchron` instead.
 

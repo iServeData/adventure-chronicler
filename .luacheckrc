@@ -19,3 +19,6 @@ files["addon"] = {
 }
 
 files["tests"] = { std = "+busted", globals = { "_G" } }
+
+-- Built from changelog.toml by tools/build_changelog.py; each change is one line.
+files["addon/AdventureChronicler/core/changelog_data.lua"] = { max_line_length = false }

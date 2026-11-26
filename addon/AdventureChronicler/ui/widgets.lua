@@ -240,4 +240,83 @@ function W.multiline(parent)
   return scroll, edit
 end
 
+-- A tick box with a label, using the game's own check button. onChange(checked) runs when clicked.
+function W.check(parent, label, onChange, colour)
+  local cb = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")
+  cb:SetSize(24, 24)
+  cb.label = W.text(cb, "body", 12, colour or W.CREAM)
+  cb.label:SetPoint("LEFT", cb, "RIGHT", 4, 0)
+  cb.label:SetText(label or "")
+  cb:SetScript("OnClick", function(self) if onChange then onChange(self:GetChecked() == true) end end)
+  return cb
+end
+
+-- A one-line parchment field that can be selected and copied but not changed. Returns the box and the
+-- edit box; box:SetValue(text) sets what it shows.
+function W.readonly(parent, height)
+  local box = W.parchment(parent)
+  box:SetHeight(height or 26)
+  local e = CreateFrame("EditBox", nil, box)
+  e:SetAutoFocus(false)
+  e:SetHeight(20)
+  e:SetPoint("LEFT", 8, 0)
+  e:SetPoint("RIGHT", -8, 0)
+  e:SetFontObject(ChatFontNormal)
+  e:SetTextColor(W.INK[1], W.INK[2], W.INK[3])
+  box.value = ""
+  e:SetScript("OnTextChanged", function(self, user) if user then self:SetText(box.value); self:HighlightText() end end)
+  e:SetScript("OnEditFocusGained", function(self) self:HighlightText() end)
+  e:SetScript("OnEscapePressed", e.ClearFocus)
+  box.SetValue = function(self, v) self.value = v or ""; e:SetText(self.value); e:SetCursorPosition(0) end
+  box.edit = e
+  return box, e
+end
+
+-- A one-line parchment field the player types into. Returns the box and the edit box.
+function W.input(parent, height)
+  local box = W.parchment(parent)
+  box:SetHeight(height or 26)
+  local e = CreateFrame("EditBox", nil, box)
+  e:SetAutoFocus(false)
+  e:SetHeight(20)
+  e:SetPoint("LEFT", 8, 0)
+  e:SetPoint("RIGHT", -8, 0)
+  e:SetFontObject(ChatFontNormal)
+  e:SetTextColor(W.INK[1], W.INK[2], W.INK[3])
+  e:SetScript("OnEscapePressed", e.ClearFocus)
+  box.edit = e
+  return box, e
+end
+
+-- A button showing the current choice; clicking it opens a list below it. choices = { {value, label}, ... }.
+-- onPick(value) runs when one is clicked. Returns the button; button:SetValue(value) updates its label.
+function W.choice(parent, width, choices, onPick)
+  local b = W.button(parent, "", width, nil, "dark", 24)
+  local menu = CreateFrame("Frame", nil, b)
+  menu:SetFrameStrata("FULLSCREEN_DIALOG")
+  menu:SetPoint("TOPRIGHT", b, "BOTTOMRIGHT", 0, -2)
+  menu:SetSize(width, #choices * 20 + 10)
+  local bg = menu:CreateTexture(nil, "BACKGROUND")
+  bg:SetAllPoints()
+  bg:SetTexture(W.media("frame_bg"))
+  W.goldBorder(menu, 0)
+  menu:Hide()
+  for i, c in ipairs(choices) do
+    local row = CreateFrame("Button", nil, menu)
+    row:SetSize(width - 12, 20)
+    row:SetPoint("TOPLEFT", 6, -5 - (i - 1) * 20)
+    row:SetHighlightTexture(W.media("button_glow"), "ADD")
+    row.label = W.text(row, "body", 12, W.CREAM)
+    row.label:SetPoint("LEFT", 6, 0)
+    row.label:SetText(c[2])
+    row:SetScript("OnClick", function() menu:Hide(); b:SetValue(c[1]); if onPick then onPick(c[1]) end end)
+  end
+  b:SetScript("OnClick", function() if menu:IsShown() then menu:Hide() else menu:Show() end end)
+  b.SetValue = function(self, v)
+    for _, c in ipairs(choices) do if c[1] == v then self.label:SetText(c[2] .. "  v") end end
+  end
+  b.menu = menu
+  return b
+end
+
 return W
