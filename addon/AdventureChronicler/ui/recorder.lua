@@ -189,7 +189,7 @@ local function build()
   end)
   -- While this window is open the mini recorder steps aside; closing it during a session brings the
   -- mini recorder up (even if it had been closed with its x).
-  f:SetScript("OnShow", function() if ns.ui.indicator then ns.ui.indicator.update() end end)
+  f:HookScript("OnShow", function() if ns.ui.indicator then ns.ui.indicator.update() end end)
   f:SetScript("OnHide", function()
     local I = ns.ui.indicator
     if I then I.closed = false; I.update() end

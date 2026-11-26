@@ -103,5 +103,7 @@ Setup: install as in [install.md](install.md). Turn on Lua errors with `/console
 | 74 | Open the quest log at Start in the details panel; with the chat box open, Shift-click a quest there, a quest's "Quest:" row, and an Accepted timeline row | Each puts the quest in chat. Note whether WoW Forever makes a real quest link or the plain [Name] text |
 | 75 | Shift-click a Received or Chose a reward row in the timeline, and an item the game hasn't loaded yet | The item link goes into chat; the unloaded one after a moment, or as [Name] |
 | 76 | Open the Recorder, Settings, What's new and Report a problem | Each says Adventure Chronicler at the top with its own name under it in smaller gold text, nothing cut off (the Recorder is the narrowest). Review, Export and Note keep one line: "Adventure Chronicler: review" and so on |
+| 77 | Open `/ac review`, then click Settings in the Recorder; open What's new and Report a problem from Settings | Each window opens in front of the others; clicking a window brings it to the front (0.3.7) |
+| 78 | Open an event's details panel, then delete every session in the review window | The details panel closes; Rename and Filter are hidden while there are no sessions, and come back when you start one |
 
 Record the results in a copy of this table and add a summary to [test_results.md](test_results.md). Don't commit real exports or saved data.

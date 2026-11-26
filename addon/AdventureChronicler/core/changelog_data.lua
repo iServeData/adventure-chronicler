@@ -4,6 +4,15 @@ local _, ns = ...
 ns = ns or {}
 
 ns.CHANGELOG = {
+  { version = "0.3.7", date = "2026-11-26", status = "prototype, unreleased",
+    title = "Settings opens in front",
+    changes = {
+      { kind = "Fixed", area = "Windows",
+        text = "Settings no longer opens behind the review window. Any Adventure Chronicler window you open now comes to the front." },
+      { kind = "Fixed", area = "Review",
+        text = "After you delete the last session, the details panel closes and Rename and Filter are hidden until there is a session again." },
+    },
+  },
   { version = "0.3.6", date = "2026-11-26", status = "prototype, unreleased",
     title = "Continue a stopped session, Shift-click quests",
     changes = {

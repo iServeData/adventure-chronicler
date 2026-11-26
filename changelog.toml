@@ -8,6 +8,22 @@
 #                       text = one or two sentences
 
 [[release]]
+version = "0.3.7"
+date = "2026-11-26"
+title = "Settings opens in front"
+status = "prototype"
+
+[[release.change]]
+area = "Windows"
+kind = "fixed"
+text = "Settings no longer opens behind the review window. Any Adventure Chronicler window you open now comes to the front."
+
+[[release.change]]
+area = "Review"
+kind = "fixed"
+text = "After you delete the last session, the details panel closes and Rename and Filter are hidden until there is a session again."
+
+[[release]]
 version = "0.3.6"
 date = "2026-11-26"
 title = "Continue a stopped session, Shift-click quests"

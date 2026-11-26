@@ -206,7 +206,7 @@ describe("what's new", function()
     local ns = H.load()
     local list = ns.CHANGELOG
     assert.truthy(#list >= 2)
-    assert.equal("0.3.6", list[1].version)
+    assert.equal("0.3.7", list[1].version)
     for _, r in ipairs(list) do assert.truthy(#r.changes >= 1, r.version) end
   end)
 
@@ -218,6 +218,8 @@ describe("what's new", function()
     loaded("AdventureChronicler", ns)
     assert.equal("a || b", ns.ui.whatsnew.format("a | b"))
     assert.equal("use |cffffd100/ac link|r now", ns.ui.whatsnew.format("use `/ac link` now"))
-    assert.truthy(ns.ui.whatsnew.page(ns.CHANGELOG[1]):find("New", 1, true))
+    local sample = { version = "9.9.9", date = "2026-01-01", title = "Synthetic", changes = {
+      { kind = "New", area = "Review", text = "A synthetic change." } } }
+    assert.truthy(ns.ui.whatsnew.page(sample):find("New", 1, true))
   end)
 end)

@@ -252,7 +252,6 @@ end
 local function build()
   f = W().window("AdventureChroniclerSettings", W().BRAND, 660, 470,
     { compass = true, header = 40, titleSize = 17, subtitle = "Settings" })
-  f:SetFrameStrata("HIGH")
   version = W().text(f, "body", 11, W().MUTED)
   version:SetPoint("RIGHT", f.closeButton, "LEFT", -12, 0)
   local prev
@@ -300,6 +299,7 @@ function T.open(tab)
   selectTab(tab or T.tab)
 end
 
+function T.frame() return f end
 function T.isShown() return f ~= nil and f:IsShown() == true end
 function T.rows() return rows end
 function T.parts() return { options = opt, community = com, export = exp, search = searchInput } end

@@ -305,10 +305,14 @@ function R.refresh()
   if not s then
     header:SetText("No sessions yet. Type /ac start to begin.") status:SetText("") pageLabel:SetText("")
     R.updateContinue(nil)
+    -- Nothing to rename, filter or show details for once the last session is gone.
+    ns.ui.details.hide(); renameLink:Hide(); filterButton:Hide(); filterPanel:Hide()
     timeline.setContentHeight(0)
     return
   end
   header:SetText(s.title ~= "" and s.title or "Untitled")
+  if not titleBox:IsShown() then renameLink:Show() end
+  filterButton:Show()
   R.updateContinue(s)
   local all = R.entries(s)
   local filtered, total = ns.reviewfilter.apply(all, R.filter, R.qualityOf)

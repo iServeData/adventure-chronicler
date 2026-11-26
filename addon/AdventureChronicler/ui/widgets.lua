@@ -105,6 +105,8 @@ function W.window(name, title, width, height, opts)
   f:SetPoint("CENTER")
   f:SetFrameStrata("DIALOG")
   f:SetToplevel(true)
+  -- Opening a window brings it in front of the other Adventure Chronicler windows.
+  f:HookScript("OnShow", function(self) self:Raise() end)
   f:SetMovable(true)
   f:EnableMouse(true)
   f:RegisterForDrag("LeftButton")

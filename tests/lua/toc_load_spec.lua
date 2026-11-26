@@ -12,6 +12,8 @@ local function stubObject()
     if k == "IsShown" then f = function() return t._shown end end
     if k == "Show" then f = function() t._shown = true end end
     if k == "Hide" then f = function() t._shown = false end end
+    if k == "SetFrameStrata" then f = function(_, v) t._strata = v end end
+    if k == "GetFrameStrata" then f = function() return t._strata end end
     rawset(t, k, f)
     return f
   end })
@@ -178,6 +180,8 @@ describe("addon load (stubbed)", function()
       -- The settings window opens on each tab; the tick boxes change the same settings as /ac set.
       slash("settings")
       assert.is_true(ns.ui.settings.isShown())
+      -- 0.3.7: Settings sits on the same layer as the other windows, so it opens in front of Review.
+      assert.equal("DIALOG", ns.ui.settings.frame():GetFrameStrata())
       for _, tab in ipairs(ns.ui.settings.TABS) do ns.ui.settings.open(tab) end
       ns.ui.settings.open("Options")
       local rowsShown = ns.ui.settings.rows()
@@ -201,7 +205,7 @@ describe("addon load (stubbed)", function()
       slash("report")
       ns.ui.report.setWhat("The mini recorder didn't show")
       local report = ns.ui.report.text()
-      assert.truthy(report:find("Adventure Chronicler 0.3.6", 1, true))
+      assert.truthy(report:find("Adventure Chronicler 0.3.7", 1, true))
       assert.truthy(report:find("loot.lua:1: boom", 1, true))
       assert.truthy(report:find("What happened: The mini recorder didn't show", 1, true))
       assert.is_nil(report:find("Examplechar", 1, true)); assert.is_nil(report:find("Example Realm", 1, true))
@@ -211,7 +215,7 @@ describe("addon load (stubbed)", function()
       -- What's new opens on the newest version, and from Help.
       slash("whatsnew")
       assert.is_true(ns.ui.whatsnew.isShown())
-      assert.equal("0.3.6", ns.ui.whatsnew.current().version)
+      assert.equal("0.3.7", ns.ui.whatsnew.current().version)
 
       -- The review window's Filter only hides rows.
       slash("review")

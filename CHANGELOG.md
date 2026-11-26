@@ -2,6 +2,11 @@
 
 Built from `changelog.toml` by `tools/build_changelog.py`; edit that file, not this one.
 
+## 0.3.7 · 2026-11-26 · Settings opens in front (prototype, unreleased)
+
+- **Fixed** (Windows): Settings no longer opens behind the review window. Any Adventure Chronicler window you open now comes to the front.
+- **Fixed** (Review): After you delete the last session, the details panel closes and Rename and Filter are hidden until there is a session again.
+
 ## 0.3.6 · 2026-11-26 · Continue a stopped session, Shift-click quests (prototype, unreleased)
 
 - **New** (Review): Continue a session you stopped: select it in the review window and click Continue, or type /ac continue for the one you stopped last. It asks first, then the same session records again. The time it was stopped shows as a pause, a "Continued after stopping" line marks where it picks up, and nothing is assumed about the time in between.
