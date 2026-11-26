@@ -98,8 +98,8 @@ Summary from the player's own exports (not committed):
   (inferred), bookmarks, pause, the offline gap, stop and export. No character name or chat in the export.
 - Failed: `quest.accepted` had only the title and quest ID. No objectives, no progress and no "quest log at
   start". Cause: the addon read the quest log with `GetQuestLogTitle`, which Forever doesn't have. **Fixed in
-  0.3.1 (C_QuestLog); needs a retest (checks 37 to 40 and 51)**
-- Failed: every loot window was recorded twice, 0 to 1 seconds apart. **Fixed in 0.3.1; needs a retest
+  0.3.2 (C_QuestLog); needs a retest (checks 37 to 40 and 51)**
+- Failed: every loot window was recorded twice, 0 to 1 seconds apart. **Fixed in 0.3.2; needs a retest
   (check 52)**
-- Reward names the game hadn't loaded yet stayed "name not loaded yet". **Fixed in 0.3.1; needs a retest
+- Reward names the game hadn't loaded yet stayed "name not loaded yet". **Fixed in 0.3.2; needs a retest
   (check 53)**

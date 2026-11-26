@@ -1,4 +1,4 @@
--- MOCKED: the 0.3.1 fixes for WoW Forever, against a fake API modelled on what a real 0.3.0 log showed
+-- MOCKED: the 0.3.2 fixes for WoW Forever, against a fake API modelled on what a real 0.3.0 log showed
 -- (every loot window listed twice; no GetQuestLogTitle, only C_QuestLog; reward names not loaded yet).
 -- All quests, items and text here are synthetic. Nothing here proves how the real client behaves.
 local H = require("tests.lua.helper")
