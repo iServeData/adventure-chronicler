@@ -9,7 +9,7 @@ ns.ui = ns.ui or {}
 local N = { index = 1 }
 ns.ui.whatsnew = N
 
-local f, listChild, pageChild, pageText, pageHead, pageMeta, newer, older, showCheck
+local f, listChild, pageChild, pageScroll, pageText, pageHead, pageMeta, newer, older, showCheck
 local versionRows = {}
 
 local KIND_COLOUR = { New = "6fd36f", Improved = "d6ab5c", Fixed = "7fb4ff" }
@@ -43,7 +43,8 @@ local function refresh()
   pageHead:SetText(r.version .. "  " .. N.format(r.title))
   pageMeta:SetText(r.date .. " · " .. r.status)
   pageText:SetText(N.page(r))
-  pageChild:SetHeight(math.max(10, (tonumber(pageText:GetStringHeight()) or 0) + 20))
+  pageScroll.setContentHeight((tonumber(pageText:GetStringHeight()) or 0) + 20)
+  pageScroll.toTop()
   newer:SetEnabled(N.index > 1)
   older:SetEnabled(N.index < #list)
   showCheck:SetChecked(ns.App.settings.whats_new_on_update == true)
@@ -54,12 +55,9 @@ local function build()
   f = W.window("AdventureChroniclerWhatsNew", "What's new", 680, 460, { compass = true, header = 40 })
   f:SetFrameStrata("FULLSCREEN_DIALOG")
 
-  local list = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
+  local list
+  list, listChild = W.scroll(f, 150, 340)
   list:SetPoint("TOPLEFT", 16, -54)
-  list:SetSize(150, 340)
-  listChild = CreateFrame("Frame", nil, list)
-  listChild:SetSize(150, 10)
-  list:SetScrollChild(listChild)
   for i, r in ipairs(releases()) do
     local idx = i
     local b = CreateFrame("Button", nil, listChild)
@@ -75,7 +73,7 @@ local function build()
     b:SetScript("OnClick", function() N.index = idx; refresh() end)
     versionRows[i] = b
   end
-  listChild:SetHeight(math.max(10, #versionRows * 26))
+  list.setContentHeight(#versionRows * 26)
 
   local paper = W.parchment(f)
   paper:SetPoint("TOPLEFT", 186, -54)
@@ -87,12 +85,11 @@ local function build()
   pageMeta = W.text(paper, "body", 11, W.INK)
   pageMeta:SetPoint("TOPLEFT", 16, -38)
   pageMeta:SetAlpha(0.75)
-  local scroll = CreateFrame("ScrollFrame", nil, paper, "UIPanelScrollFrameTemplate")
+  local scroll
+  scroll, pageChild = W.scroll(paper, 420, 280)
   scroll:SetPoint("TOPLEFT", 14, -60)
   scroll:SetPoint("BOTTOMRIGHT", -30, 10)
-  pageChild = CreateFrame("Frame", nil, scroll)
-  pageChild:SetSize(420, 10)
-  scroll:SetScrollChild(pageChild)
+  pageScroll = scroll
   scroll:SetScript("OnSizeChanged", function(_, w) pageChild:SetWidth(math.max(50, w)); pageText:SetWidth(w - 6) end)
   pageText = W.text(pageChild, "body", 13, W.INK)
   pageText:SetPoint("TOPLEFT", 2, 0)

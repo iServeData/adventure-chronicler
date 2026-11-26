@@ -2,6 +2,14 @@
 
 Built from `changelog.toml` by `tools/build_changelog.py`; edit that file, not this one.
 
+## 0.3.5 · 2026-11-26 · Event details in review, export size (prototype, unreleased)
+
+- **New** (Review): Under the session's title, a status line with the state, time recorded, events and notes, and the export size, for example "export 6.2 KB of 512 KB". It turns amber from 400 KB and red if the session is too large to export.
+- **New** (Review): Hover over an event to see more. Items show the game's own item tooltip; quests show the game's quest tooltip where WoW Forever has one, or what was recorded (level, objectives). Loot windows list each item in its quality colour.
+- **New** (Review): Click an event for a details panel beside the review window with everything recorded for it: zone, instance and difficulty, quest objectives, reward choices, items and certainty. Anything not recorded says so. Shift-click an item to put its link in chat. Click the event again, or the x, to close it.
+- **Improved** (Review): Instance portals that report Entered, Left, Entered within a second now show as one row, for example "Entered Scarlet Monastery [+2 enter/leave lines]". Every line is still kept and exported; the tooltip and details panel list them all, and the row's x deletes all of them.
+- **Fixed** (Review): The review and What's new windows' scroll bars showed as plain dark squares on WoW Forever. They are now slim gold bars that only appear when there is more to scroll, and the mouse wheel scrolls.
+
 ## 0.3.4 · 2026-11-26 · Settings window, loot filter and What's new (prototype, unreleased)
 
 - **Improved** (Export): The export window shows two steps: 1. Copy the code, 2. Paste the code at, with the import address in a field to copy. The Open QuestersBoard button and its second window are gone, since add-ons can't open a browser.

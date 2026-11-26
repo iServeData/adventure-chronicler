@@ -86,9 +86,16 @@ Setup: install as in [install.md](install.md). Turn on Lua errors with `/console
 | 57 | On Options, type "quest" in the search box, then clear it | Only matching settings show, from every category; clearing brings the category list back |
 | 58 | Change some Loot settings, then press Defaults | Only that category goes back to its defaults |
 | 59 | With loot on, set lowest quality to Uncommon and tick "Leave out trade goods" and "Leave out junk you sell to vendors"; loot corpses with grey, white, trade good and quest items, then export | Only Uncommon and better, and quest items, are in `loot.seen`. Tick "Leave out quest items" and quest items go too. Note whether any item's quality or type was missing |
-| 60 | In `/ac review`, open Filter on a session with loot: untick types, untick qualities, tick Hide "seen" if received, then press the red x | The badge counts the filters and the header says "showing X of Y". The red x clears them all. After `/reload` the filter is clear |
+| 60 | In `/ac review`, open Filter on a session with loot: untick types, untick qualities, tick Hide "seen" if received, then press the red x | The badge counts the filters and the status line under the title says "showing X of Y". The red x clears them all. After `/reload` the filter is clear |
 | 61 | `/ac report`; type more than 200 letters; copy the report | The counter stops at 200. The report has versions, recording state, settings and last error, and no names. "3. Paste it at:" shows the community invite (public build: the issue page) |
 | 62 | Settings > Community in the community build | The community's name and the addresses from its community file, and no host listed in `forbid_hosts`; each field copies with Ctrl+C |
 | 63 | Settings > Export: save your own address, then press "Use the add-on's" | The export window follows each change |
+| 64 | Open `/ac review` on a session with a few events, then on a long one | Under the title: state, time recorded, events, notes and "export N KB of 512 KB". The title is no longer cut off by the Filter button |
+| 65 | While recording with review open, do things for a minute | The size updates within about 15 seconds; no stutter when events arrive |
+| 66 | Hover an item event (Received, Chose a reward), then a loot window event | The game's own item tooltip with the recorded lines under it; for loot, each item in its quality colour. An item the game hasn't loaded yet fills in after a moment |
+| 67 | Hover a quest event (Accepted, Progress, Turned in) | Note whether WoW Forever shows its own quest tooltip. Either way, level and objectives as recorded |
+| 68 | Click an event; hover and Shift-click an item in the panel with the chat box open; click the event again | The panel opens beside the review window (left side if there's no room on the right) with what was recorded; missing things say "not recorded". Shift-click puts the item link in chat. Clicking again or the x closes it |
+| 69 | Go in and out of an instance portal | "Entered <instance> [+2 enter/leave lines]" as one row where the game reported several in a second. Its tooltip lists them all; its x deletes them all; the export still has every line |
+| 70 | Scroll the session list, the timeline and What's new with the mouse wheel and by dragging the gold bar | Slim gold bars only when there's more to scroll; no dark squares |
 
 Record the results in a copy of this table and add a summary to [test_results.md](test_results.md). Don't commit real exports or saved data.

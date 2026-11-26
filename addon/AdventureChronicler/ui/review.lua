@@ -1,6 +1,9 @@
 -- Adventure Chronicler: review window. Lists sessions, shows a session's timeline and notes, and lets
 -- the player delete a whole session, a single observation or a note. Nothing is sent anywhere.
 -- The Filter only hides rows from view (core/reviewfilter.lua); nothing is deleted and exports keep everything.
+-- 0.3.5: the status line under the title shows the export size; hovering a row shows a tooltip and
+-- clicking it opens the details panel (ui/details.lua); instance enter/leave lines within a second show as
+-- one row (core/details.lua, display only).
 local _, ns = ...
 ns = ns or {}
 ns.ui = ns.ui or {}
@@ -10,7 +13,9 @@ R.filter = ns.reviewfilter and ns.reviewfilter.new() or { types = {}, qualities 
 ns.ui.review = R
 
 local PAGE = 60
-local f, list, listChild, timeline, timelineChild, header, pageLabel, titleBox, titleInput, renameLink
+local f, list, listChild, timeline, timelineChild, header, status, pageLabel, titleBox, titleInput, renameLink
+local SIZE_EVERY = 15 -- while recording, the export size is worked out again at most this often (seconds)
+local sizeCache = { key = nil, id = nil, bytes = nil, at = 0, pending = false }
 local sessionRows, lineRows = {}, {}
 local filterButton, filterClear, filterPanel
 local filterChecks = {}
@@ -118,18 +123,19 @@ end
 
 local function build()
   f = W().window("AdventureChroniclerReview", "Adventure Chronicler: review", 760, 460, { compass = true })
-  list = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
+  list, listChild = W().scroll(f, 220, 366)
   list:SetPoint("TOPLEFT", 14, -42)
-  list:SetSize(220, 366)
-  listChild = CreateFrame("Frame", nil, list)
-  listChild:SetSize(220, 10)
-  list:SetScrollChild(listChild)
 
   header = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
   header:SetPoint("TOPLEFT", 262, -42)
   header:SetPoint("RIGHT", -196, 0)
   header:SetJustifyH("LEFT")
   header:SetWordWrap(false)
+  status = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+  status:SetPoint("TOPLEFT", 262, -62)
+  status:SetPoint("RIGHT", -44, 0)
+  status:SetJustifyH("LEFT")
+  status:SetWordWrap(false)
 
   -- Rename: click the title (or Rename), type, Enter saves, Escape keeps the old name. Works on any
   -- session, stopped or not. Only the title changes; observations and notes stay as they are.
@@ -172,12 +178,8 @@ local function build()
   renameLink:SetPoint("TOPRIGHT", -142, -40)
   buildFilter()
 
-  timeline = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
-  timeline:SetPoint("TOPLEFT", 262, -64)
-  timeline:SetSize(460, 344)
-  timelineChild = CreateFrame("Frame", nil, timeline)
-  timelineChild:SetSize(460, 10)
-  timeline:SetScrollChild(timelineChild)
+  timeline, timelineChild = W().scroll(f, 460, 326)
+  timeline:SetPoint("TOPLEFT", 262, -82)
 
   local export = W().button(f, "Export", 80, function() if R.selected then ns.App.export(R.selected) end end)
   export:SetPoint("BOTTOMRIGHT", -18, 16)
@@ -190,15 +192,55 @@ local function build()
     StaticPopup_Show("ADVENTURECHRONICLER_DELETE_SESSION", warn, nil, { id = s.id })
   end, "red")
   delete:SetPoint("RIGHT", note, "LEFT", -6, 0)
-  local nextB = W().button(f, ">", 28, function() R.page = R.page + 1; R.refresh() end)
+  local nextB = W().button(f, ">", 28, function() R.page = R.page + 1; timeline.toTop(); R.refresh() end)
   nextB:SetPoint("BOTTOMLEFT", 330, 16)
   pageLabel = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
   pageLabel:SetPoint("RIGHT", nextB, "LEFT", -6, 0)
-  local prevB = W().button(f, "<", 28, function() R.page = math.max(1, R.page - 1); R.refresh() end)
+  local prevB = W().button(f, "<", 28, function() R.page = math.max(1, R.page - 1); timeline.toTop(); R.refresh() end)
   prevB:SetPoint("RIGHT", pageLabel, "LEFT", -6, 0)
 end
 
 local function stamp(t) return date("%Y-%m-%d %H:%M", t) end
+
+-- The import code's size in bytes, worked out when a session is opened or changed. While a session is
+-- recording it changes with every event, so it's worked out again at most every SIZE_EVERY seconds.
+function R.exportSize(s)
+  local App, st = ns.App, ns.App.settings
+  local key = table.concat({ tostring(s.id), tostring(s.modified_at), #s.observations, #s.notes,
+    tostring(s.counters.merged), tostring(s.title), tostring(st.include_identity),
+    tostring(st.include_class_level), tostring(st.record_quest_text), tostring(st.record_personal_loot) }, "|")
+  if key == sizeCache.key then return sizeCache.bytes end
+  local now = App.now()
+  if s.state == "recording" and sizeCache.id == s.id and sizeCache.bytes and now - sizeCache.at < SIZE_EVERY then
+    if not sizeCache.pending and C_Timer and C_Timer.After then
+      sizeCache.pending = true
+      C_Timer.After(SIZE_EVERY, function() sizeCache.pending = false; R.refresh() end)
+    end
+    return sizeCache.bytes
+  end
+  sizeCache.key, sizeCache.id, sizeCache.at = key, s.id, now
+  sizeCache.bytes = ns.Export.size(s, st, App.VERSION)
+  return sizeCache.bytes
+end
+
+local SIZE_COLOUR = { ok = "cccccc", warn = "ffb340", over = "ff4040" }
+
+-- The line under the title: state, time, counts, export size, and anything worth knowing.
+function R.statusText(s, bytes, shown, total)
+  local recorded = ns.util.formatDuration(ns.Session.recordedSeconds(s, ns.App.now()))
+  local nObs, nNotes = 0, #s.notes
+  for _, o in ipairs(s.observations) do if o.type ~= "marker.bookmark" then nObs = nObs + 1 end end
+  local sizeText, level = ns.details.sizeText(bytes, ns.limits.max_export_bytes)
+  local parts = { s.state .. (s.interrupted and " (interrupted)" or ""), "recorded " .. recorded,
+    nObs .. (nObs == 1 and " event" or " events") }
+  if nNotes > 0 then parts[#parts + 1] = nNotes .. (nNotes == 1 and " note" or " notes") end
+  parts[#parts + 1] = "|cff" .. SIZE_COLOUR[level] .. sizeText .. "|cffcccccc"
+  if s.counters.dropped > 0 then parts[#parts + 1] = s.counters.dropped .. " not kept (full)" end
+  if shown and total and shown ~= total then
+    parts[#parts + 1] = string.format("|cffa89880showing %d of %d|cffcccccc", shown, total)
+  end
+  return "|cffcccccc" .. table.concat(parts, " · ") .. "|r"
+end
 
 -- Build the visible rows (notes and observations merged by time) for one session.
 function R.entries(s)
@@ -227,23 +269,32 @@ function R.refresh()
     local name = s.title ~= "" and s.title or stamp(s.started_at)
     local mark = s.id == db.active_id and ("|cffff4040" .. s.state .. "|r ") or ""
     r.text:SetText((s.id == R.selected and "> " or "") .. mark .. name)
-    r:SetScript("OnClick", function() R.selected = s.id; R.page = 1; R.refresh() end)
+    r:SetScript("OnClick", function()
+      if R.selected ~= s.id then ns.ui.details.hide(); timeline.toTop() end
+      R.selected = s.id; R.page = 1; R.refresh()
+    end)
     r.del:Hide()
     r:Show()
   end
-  listChild:SetHeight(math.max(10, i * 18))
+  list.setContentHeight(i * 18)
   for _, r in ipairs(lineRows) do r:Hide() end
   local s = R.selected and db.sessions[R.selected]
-  if not s then header:SetText("No sessions yet. Type /ac start to begin.") pageLabel:SetText("") return end
-  local recorded = ns.util.formatDuration(ns.Session.recordedSeconds(s, App.now()))
-  header:SetText(string.format("%s  |cffcccccc%s, recorded %s%s%s|r", s.title ~= "" and s.title or "Untitled",
-    s.state, recorded, s.interrupted and ", interrupted" or "",
-    s.counters.dropped > 0 and (", " .. s.counters.dropped .. " not kept (full)") or ""))
+  if not s then
+    header:SetText("No sessions yet. Type /ac start to begin.") status:SetText("") pageLabel:SetText("")
+    timeline.setContentHeight(0)
+    return
+  end
+  header:SetText(s.title ~= "" and s.title or "Untitled")
   local all = R.entries(s)
-  local entries, total = ns.reviewfilter.apply(all, R.filter, R.qualityOf)
+  local filtered, total = ns.reviewfilter.apply(all, R.filter, R.qualityOf)
   refreshFilterButton()
-  if #entries ~= total then
-    header:SetText(header:GetText() .. string.format("  |cffa89880showing %d of %d|r", #entries, total))
+  status:SetText(R.statusText(s, R.exportSize(s), #filtered, total))
+  local entries = ns.details.group(filtered)
+  if ns.ui.details.isShown() then
+    local still = false
+    local open = ns.ui.details.entry and ns.ui.details.entry.obs
+    for _, o in ipairs(s.observations) do if o == open then still = true end end
+    if not still then ns.ui.details.hide() end
   end
   local pages = math.max(1, math.ceil(#entries / PAGE))
   R.page = math.min(R.page, pages)
@@ -256,12 +307,18 @@ function R.refresh()
     local r = rowsIn(timelineChild, lineRows, n, 450)
     local when = date("%H:%M:%S", e.t)
     if e.obs then
-      r.text:SetText("|cff999999" .. when .. "|r  " .. ns.describe.observation(e.obs))
-      r:SetScript("OnClick", nil)
+      r.text:SetText("|cff999999" .. when .. "|r  " .. ns.describe.observation(e.obs) .. ns.details.groupSuffix(e))
+      r:SetScript("OnClick", function() ns.ui.details.toggle(f, e) end)
+      r:SetScript("OnEnter", function(self) ns.ui.details.showEntry(self, e) end)
+      r:SetScript("OnLeave", function() ns.ui.details.hideTooltip() end)
+      -- A grouped row's x deletes every line in it, as the row shows them as one.
       r.del:SetScript("OnClick", function()
-        ns.Session.deleteObservation(s, e.obs.seq, App.now()); R.refresh()
+        for _, g in ipairs(e.group or { e }) do ns.Session.deleteObservation(s, g.obs.seq, App.now()) end
+        R.refresh()
       end)
     else
+      r:SetScript("OnEnter", nil)
+      r:SetScript("OnLeave", nil)
       local kind = e.note.kind == "bookmark" and "Bookmark" or "Note"
       local preview = e.note.text:gsub("\n", " ")
       local sep = preview ~= "" and ":|r " or "|r"
@@ -272,7 +329,7 @@ function R.refresh()
     r.del:Show()
     r:Show()
   end
-  timelineChild:SetHeight(math.max(10, n * 18))
+  timeline.setContentHeight(n * 18)
 end
 
 function R.open()

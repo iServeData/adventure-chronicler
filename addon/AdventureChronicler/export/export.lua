@@ -133,6 +133,14 @@ function E.toText(s, settings, recorderVersion)
   return text
 end
 
+-- The size in bytes of the session's import code, even when it is over the limit (for the review window).
+-- Returns nil if it can't be encoded.
+function E.size(s, settings, recorderVersion)
+  local ok, body = pcall(json.encode, E.build(s, settings, recorderVersion))
+  if not ok then return nil end
+  return #E.envelope(body)
+end
+
 -- Small sanity helper so the export dialog can show what it contains.
 function E.summary(s)
   return {

@@ -58,6 +58,9 @@ screenshot before you share it.
 
 ## Deleting
 
+In `/ac review`, hovering an event shows the game's own item or quest tooltip, from the game data already
+on your computer, and clicking it shows what was recorded. Nothing is looked up online or sent anywhere.
+
 In `/ac review` you can delete a whole session, a single event or a note. Before you delete a session with
 notes that were never exported, the addon warns you.
 

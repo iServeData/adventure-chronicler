@@ -5,7 +5,8 @@ local H = {}
 
 local ROOT = "addon/AdventureChronicler/"
 local CORE = { "core/util.lua", "core/limits.lua", "core/community.lua", "core/options.lua", "core/report.lua",
-  "core/session.lua", "core/describe.lua", "core/reviewfilter.lua", "core/changelog_data.lua",
+  "core/session.lua", "core/describe.lua", "core/reviewfilter.lua", "core/details.lua",
+  "core/changelog_data.lua",
   "export/json.lua", "export/crc32.lua", "export/export.lua", "export/formats.lua",
   "capture/zones.lua", "capture/quests.lua", "capture/encounters.lua", "capture/pvp.lua",
   "capture/loot.lua", "capture/screenshot.lua" }

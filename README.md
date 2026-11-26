@@ -42,7 +42,7 @@ or a Markdown, text or HTML file.
 | `/ac title <name>` | Rename the session that is open (or click the title in the recorder). Any session, stopped too, can be renamed from its title in `/ac review` |
 | `/ac shot` / `/ac shot clean` | Take a screenshot as seen, or a clean scene (outside combat) |
 | `/ac stop` | End the session |
-| `/ac review` | Review, edit or delete sessions, notes and events |
+| `/ac review` | Review, edit or delete sessions, notes and events. The line under the title shows the export size. Hover an event for a tooltip (the game's own for items); click it for everything recorded |
 | `/ac export` | Show the latest session to copy: the import code for QuestersBoard, or Markdown, Text or JSON to keep as a file |
 | `/ac link <https://...>` | Set the address the export window says to paste the code at. It starts as your community's address (or the placeholder `https://example.com/import` in the public build); `/ac link clear` goes back to it |
 | `/ac settings` (or `/ac options`) | Open the Settings window: Community, Export, Options (searchable, by category) and Help |

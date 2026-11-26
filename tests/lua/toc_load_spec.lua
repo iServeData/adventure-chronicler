@@ -199,7 +199,7 @@ describe("addon load (stubbed)", function()
       slash("report")
       ns.ui.report.setWhat("The mini recorder didn't show")
       local report = ns.ui.report.text()
-      assert.truthy(report:find("Adventure Chronicler 0.3.4", 1, true))
+      assert.truthy(report:find("Adventure Chronicler 0.3.5", 1, true))
       assert.truthy(report:find("loot.lua:1: boom", 1, true))
       assert.truthy(report:find("What happened: The mini recorder didn't show", 1, true))
       assert.is_nil(report:find("Examplechar", 1, true)); assert.is_nil(report:find("Example Realm", 1, true))
@@ -209,7 +209,7 @@ describe("addon load (stubbed)", function()
       -- What's new opens on the newest version, and from Help.
       slash("whatsnew")
       assert.is_true(ns.ui.whatsnew.isShown())
-      assert.equal("0.3.4", ns.ui.whatsnew.current().version)
+      assert.equal("0.3.5", ns.ui.whatsnew.current().version)
 
       -- The review window's Filter only hides rows.
       slash("review")
@@ -218,6 +218,22 @@ describe("addon load (stubbed)", function()
       ns.ui.review.refresh()
       assert.equal(obsBefore, #s.observations)
       ns.reviewfilter.clear(ns.ui.review.filter)
+
+      -- 0.3.5: the status line has the export size; a row's details panel opens and closes; nothing changes.
+      ns.ui.review.refresh()
+      local bytes = ns.ui.review.exportSize(s)
+      assert.truthy(bytes and bytes > 0)
+      assert.truthy(ns.ui.review.statusText(s, bytes):find("export ", 1, true))
+      local firstObs = { t = 1800000000, obs = { type = "loot.seen", certainty = "seen", t = 1800000000,
+        data = { items = { { item_id = 101, name = "Example Rags", count = 2 } } } } }
+      ns.ui.details.toggle(_G.UIParent, firstObs)
+      assert.is_true(ns.ui.details.isShown())
+      local shownText = table.concat(ns.ui.details.texts(), "\n")
+      assert.truthy(shownText:find("Example Rags x2", 1, true))
+      ns.ui.details.showEntry(_G.UIParent, firstObs)
+      ns.ui.details.toggle(_G.UIParent, firstObs)
+      assert.is_false(ns.ui.details.isShown())
+      assert.equal(obsBefore, #s.observations)
 
       ns.App.DEFAULT_LINK = ""
       ns.COMMUNITY.import_url = ""

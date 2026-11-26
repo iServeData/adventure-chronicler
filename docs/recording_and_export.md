@@ -34,7 +34,7 @@ Every observation carries one of these labels:
 | Note length | 4,000 characters | Save is disabled and the counter turns red; the text is never cut off |
 | Bookmark label | 200 characters | Refused with a message |
 | Session name | 120 characters | Refused with a message |
-| Export size | 512 KiB | Refused; delete some events in review |
+| Export size | 512 KiB | Refused; delete some events in review. The review window shows each session's size, amber from 400 KiB and red past the limit |
 
 The same event repeated within 60 seconds is merged and counted as a repeat. An event with a timestamp earlier
 than the one before it is kept in order and flagged `earlier_than_previous`.

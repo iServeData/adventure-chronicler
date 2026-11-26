@@ -4,6 +4,21 @@ local _, ns = ...
 ns = ns or {}
 
 ns.CHANGELOG = {
+  { version = "0.3.5", date = "2026-11-26", status = "prototype, unreleased",
+    title = "Event details in review, export size",
+    changes = {
+      { kind = "New", area = "Review",
+        text = "Under the session's title, a status line with the state, time recorded, events and notes, and the export size, for example \"export 6.2 KB of 512 KB\". It turns amber from 400 KB and red if the session is too large to export." },
+      { kind = "New", area = "Review",
+        text = "Hover over an event to see more. Items show the game's own item tooltip; quests show the game's quest tooltip where WoW Forever has one, or what was recorded (level, objectives). Loot windows list each item in its quality colour." },
+      { kind = "New", area = "Review",
+        text = "Click an event for a details panel beside the review window with everything recorded for it: zone, instance and difficulty, quest objectives, reward choices, items and certainty. Anything not recorded says so. Shift-click an item to put its link in chat. Click the event again, or the x, to close it." },
+      { kind = "Improved", area = "Review",
+        text = "Instance portals that report Entered, Left, Entered within a second now show as one row, for example \"Entered Scarlet Monastery [+2 enter/leave lines]\". Every line is still kept and exported; the tooltip and details panel list them all, and the row's x deletes all of them." },
+      { kind = "Fixed", area = "Review",
+        text = "The review and What's new windows' scroll bars showed as plain dark squares on WoW Forever. They are now slim gold bars that only appear when there is more to scroll, and the mouse wheel scrolls." },
+    },
+  },
   { version = "0.3.4", date = "2026-11-26", status = "prototype, unreleased",
     title = "Settings window, loot filter and What's new",
     changes = {

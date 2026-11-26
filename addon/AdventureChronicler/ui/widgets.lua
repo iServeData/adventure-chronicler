@@ -240,6 +240,53 @@ function W.multiline(parent)
   return scroll, edit
 end
 
+-- A scrolling area with a slim gold bar that shows only when the content is taller than the area. Replaces
+-- the game's UIPanelScrollFrameTemplate, whose arrows and thumb showed as plain dark squares on WoW Forever
+-- (0.3.4 review window). The mouse wheel scrolls; the thumb can be dragged. The caller sets the anchors and
+-- calls scroll.setContentHeight(h) after filling the child.
+function W.scroll(parent, width, height)
+  local sf = CreateFrame("ScrollFrame", nil, parent)
+  sf:SetSize(width, height)
+  local child = CreateFrame("Frame", nil, sf)
+  child:SetSize(width, 10)
+  sf:SetScrollChild(child)
+  local bar = CreateFrame("Slider", nil, sf)
+  bar:SetOrientation("VERTICAL")
+  bar:EnableMouse(true)
+  bar:SetWidth(6)
+  bar:SetPoint("TOPLEFT", sf, "TOPRIGHT", 6, 0)
+  bar:SetPoint("BOTTOMLEFT", sf, "BOTTOMRIGHT", 6, 0)
+  local track = line(bar, "BACKGROUND", 0, 0, 0, 0.45)
+  track:SetAllPoints()
+  local thumb = bar:CreateTexture(nil, "OVERLAY")
+  thumb:SetColorTexture(W.GOLD[1], W.GOLD[2], W.GOLD[3], 0.85)
+  thumb:SetSize(6, 30)
+  bar:SetThumbTexture(thumb)
+  bar:SetMinMaxValues(0, 0)
+  bar:SetValueStep(1)
+  bar:SetValue(0)
+  bar:Hide()
+  bar:SetScript("OnValueChanged", function(_, v) sf:SetVerticalScroll(v) end)
+  sf:EnableMouseWheel(true)
+  sf:SetScript("OnMouseWheel", function(_, delta)
+    local _, max = bar:GetMinMaxValues()
+    bar:SetValue(math.max(0, math.min(tonumber(max) or 0, (tonumber(bar:GetValue()) or 0) - delta * 36)))
+  end)
+  sf.bar, sf.child = bar, child
+  function sf.setContentHeight(h)
+    h = math.max(10, h or 10)
+    child:SetHeight(h)
+    local view = tonumber(sf:GetHeight()) or height
+    local max = math.max(0, h - view)
+    bar:SetMinMaxValues(0, max)
+    if (tonumber(bar:GetValue()) or 0) > max then bar:SetValue(max) end
+    thumb:SetHeight(math.max(20, view * view / h))
+    if max > 0 then bar:Show() else bar:Hide(); bar:SetValue(0); sf:SetVerticalScroll(0) end
+  end
+  function sf.toTop() bar:SetValue(0); sf:SetVerticalScroll(0) end
+  return sf, child
+end
+
 -- A tick box with a label, using the game's own check button. onChange(checked) runs when clicked.
 function W.check(parent, label, onChange, colour)
   local cb = CreateFrame("CheckButton", nil, parent, "UICheckButtonTemplate")

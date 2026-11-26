@@ -15,6 +15,7 @@ files["addon"] = {
     "InCombatLockdown", "Screenshot", "GetBuildInfo", "GetLocale", "UnitClass", "UnitName", "UnitLevel",
     "GetRealmName", "GetInstanceInfo", "GetRealZoneText", "date", "time", "tinsert", "bit",
     "issecretvalue", "UnitFactionGroup", "GetBattlefieldWinner",
+    "IsShiftKeyDown", "ChatEdit_InsertLink",
   },
 }
 
