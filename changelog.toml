@@ -10,7 +10,7 @@
 [[release]]
 version = "0.3.1"
 date = "2026-11-24"
-title = "Smaller indicator and a minimap button"
+title = "Smaller indicator, a minimap button and Forever quest log fixes"
 status = "prototype"
 
 [[release.change]]
@@ -32,6 +32,21 @@ text = "A compass button on the minimap opens the recorder at any time, shows a 
 area = "Settings"
 kind = "new"
 text = "/ac set indicator hide hides the REC indicator completely (off by default). Chat then reminds you when recording starts, resumes or continues after login; /ac set indicator show brings it back."
+
+[[release.change]]
+area = "Recorder"
+kind = "fixed"
+text = "On WoW Forever, accepted quests now record their objectives and progress, and Start lists the quests already in your log. The add-on now reads the quest log the way Forever provides it."
+
+[[release.change]]
+area = "Recorder"
+kind = "fixed"
+text = "Each loot window is recorded once. Forever reported every window twice, so loot was listed twice."
+
+[[release.change]]
+area = "Recorder"
+kind = "fixed"
+text = "Reward items the game hadn't loaded yet get their names filled in when the game sends them, instead of staying \"name not loaded yet\"."
 
 [[release]]
 version = "0.3.0"

@@ -153,6 +153,7 @@ App.ctx = {
   now = function() return App.now() end,
   record = function(obs, opts) return App.record(obs, opts) end,
   amend = function(key, data) return S.amendLast(App.db, App.now(), key, data) end,
+  fillItemName = function(itemID, name) return S.fillItemName(App.db, App.now(), itemID, name) end,
   settings = setmetatable({}, { __index = function(_, k) return App.settings and App.settings[k] end }),
   onInstanceEnter = function(inst) App.onInstanceEnter(inst) end,
   notify = function(msg) App.print(msg) end,

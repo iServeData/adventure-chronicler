@@ -90,3 +90,16 @@ Found in this run, fixed in 0.2.3:
 - A note opened while the export window was showing appeared underneath it.
 - In the recorder, "Arrived in Orgrimmar [+1 repeats]" was cut off. The recorder now leaves the count out, and the review window says "[+1 repeat]".
 
+## Run 8: 0.3.0 and 0.3.1, Windows, WoW Forever 1.60.1, 2026-11-24 and 2026-11-25
+
+Summary from the player's own exports (not committed):
+
+- Worked: zones, deaths, quest turn-ins with experience and money, reward windows, items received
+  (inferred), bookmarks, pause, the offline gap, stop and export. No character name or chat in the export.
+- Failed: `quest.accepted` had only the title and quest ID. No objectives, no progress and no "quest log at
+  start". Cause: the addon read the quest log with `GetQuestLogTitle`, which Forever doesn't have. **Fixed in
+  0.3.1 (C_QuestLog); needs a retest (checks 37 to 40 and 51)**
+- Failed: every loot window was recorded twice, 0 to 1 seconds apart. **Fixed in 0.3.1; needs a retest
+  (check 52)**
+- Reward names the game hadn't loaded yet stayed "name not loaded yet". **Fixed in 0.3.1; needs a retest
+  (check 53)**

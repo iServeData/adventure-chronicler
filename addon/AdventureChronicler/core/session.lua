@@ -213,6 +213,34 @@ function S.observe(db, now, obs, opts)
   return "added", rec
 end
 
+-- Fills in an item's name where a reward panel listed it before the game had loaded it (name_pending),
+-- in the newest observations of the open session. Only that item ID's entries change. Returns how many.
+local NAME_TYPES = { ["quest.rewards_offered"] = true, ["quest.reward_selected"] = true, ["item.received"] = true }
+function S.fillItemName(db, now, itemID, name, lookback)
+  local s = S.active(db)
+  if not s or type(itemID) ~= "number" or type(name) ~= "string" or name == "" then return 0 end
+  local n, stop = 0, math.max(1, #s.observations - (lookback or 200) + 1)
+  local function fix(it)
+    if type(it) == "table" and it.item_id == itemID and (it.name_pending or it.name == nil) then
+      it.name, it.name_pending = name, nil
+      n = n + 1
+    end
+  end
+  for i = #s.observations, stop, -1 do
+    local o = s.observations[i]
+    if NAME_TYPES[o.type] and type(o.data) == "table" then
+      if o.type == "quest.rewards_offered" then
+        for _, it in ipairs(o.data.choices or {}) do fix(it) end
+        for _, it in ipairs(o.data.guaranteed or {}) do fix(it) end
+      else
+        fix(o.data)
+      end
+    end
+  end
+  if n > 0 then s.modified_at = now end
+  return n
+end
+
 -- Updates the newest observation in place when it carries this key (nothing happened in between),
 -- for example quest progress 3/8 then 4/8. Returns "amended" + the record, or nil when it can't.
 -- The record keeps its first time; data.last_t says when it was last updated.

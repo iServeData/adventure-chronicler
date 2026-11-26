@@ -17,7 +17,9 @@ local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("PLAYER_LOGIN")
 frame:RegisterEvent("PLAYER_LOGOUT")
-for event in pairs(handlers) do frame:RegisterEvent(event) end
+-- pcall: an event this client doesn't have (for example ITEM_DATA_LOAD_RESULT on an older client)
+-- must not stop the others from registering.
+for event in pairs(handlers) do pcall(frame.RegisterEvent, frame, event) end
 
 frame:SetScript("OnEvent", function(_, event, ...)
   if event == "ADDON_LOADED" then

@@ -2,12 +2,15 @@
 
 Built from `changelog.toml` by `tools/build_changelog.py`; edit that file, not this one.
 
-## 0.3.1 · 2026-11-24 · Smaller indicator and a minimap button (prototype, unreleased)
+## 0.3.1 · 2026-11-24 · Smaller indicator, a minimap button and Forever quest log fixes (prototype, unreleased)
 
 - **New** (Recorder): The REC indicator has an x button that shrinks it to a small tab with a red (recording) or gold (paused) dot and the time. Click the tab to bring the full window back; the choice is remembered.
 - **New** (Recorder): A compass button at the start of the indicator's row (and on the small tab) opens the recorder, so you don't have to type /ac.
 - **New** (Windows): A compass button on the minimap opens the recorder at any time, shows a red or gold dot while a session is open, and can be dragged around the minimap. /ac set minimap off hides it.
 - **New** (Settings): /ac set indicator hide hides the REC indicator completely (off by default). Chat then reminds you when recording starts, resumes or continues after login; /ac set indicator show brings it back.
+- **Fixed** (Recorder): On WoW Forever, accepted quests now record their objectives and progress, and Start lists the quests already in your log. The add-on now reads the quest log the way Forever provides it.
+- **Fixed** (Recorder): Each loot window is recorded once. Forever reported every window twice, so loot was listed twice.
+- **Fixed** (Recorder): Reward items the game hadn't loaded yet get their names filled in when the game sends them, instead of staying "name not loaded yet".
 
 ## 0.3.0 · 2026-11-24 · Quest objectives and progress (prototype, unreleased)
 

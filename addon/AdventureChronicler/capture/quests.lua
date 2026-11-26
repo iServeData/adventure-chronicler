@@ -20,12 +20,12 @@ ns = ns or {}
 ns.capture = ns.capture or {}
 local util = ns.util
 
-local Q = { pending = {}, current = nil, awaitingBags = {}, baseline = nil, busy = false }
+local Q = { pending = {}, current = nil, awaitingBags = {}, baseline = nil, busy = false, wanted = {} }
 ns.capture.quests = Q
 
 Q.RECEIPT_WINDOW = 10 -- seconds after turn-in to look for bag changes
 
-function Q.reset() Q.pending, Q.current, Q.awaitingBags, Q.baseline, Q.busy = {}, nil, {}, nil, false end
+function Q.reset() Q.pending, Q.current, Q.awaitingBags, Q.baseline, Q.busy, Q.wanted = {}, nil, {}, nil, false, {} end
 
 local function itemCount(api, itemID)
   local f = (api.C_Item and api.C_Item.GetItemCount) or api.GetItemCount
@@ -43,6 +43,7 @@ local function readItems(api, kind, count)
     local entry = { index = i, item_id = itemID, name = (name ~= "" and name) or nil, count = qty or 1 }
     if not entry.name then
       entry.name_pending = true -- item not cached yet; the ID is still reliable
+      if itemID then Q.wanted[itemID] = true end -- filled in when the game sends the name (Q.onItemInfo)
       if itemID and api.C_Item and api.C_Item.RequestLoadItemDataByID then
         pcall(api.C_Item.RequestLoadItemDataByID, itemID)
       end
@@ -99,8 +100,41 @@ local function readObjectives(api, index, questID)
   return out
 end
 
--- Every quest the log lists (quests under collapsed headers can't be read this way).
+-- Every quest the log lists. WoW Forever has only the C_QuestLog functions (a real 0.3.0 log showed
+-- GetQuestLogTitle and GetNumQuestLogEntries missing, so accepted quests had just a title); older
+-- clients have only the globals, which stay as the fallback. With the globals, quests under collapsed
+-- headers can't be read.
+local function questComplete(api, info, questID)
+  if info.isComplete ~= nil then return info.isComplete == 1 or info.isComplete == true end
+  local f = api.C_QuestLog.IsComplete or api.C_QuestLog.ReadyForTurnIn
+  if not f then return false end
+  local ok, r = pcall(f, questID)
+  return ok and r == true
+end
+
+local function readLogModern(api)
+  local out, order = {}, {}
+  local ok, n = pcall(api.C_QuestLog.GetNumQuestLogEntries)
+  if not ok or type(n) ~= "number" then return nil end
+  for i = 1, n do
+    local okInfo, info = pcall(api.C_QuestLog.GetInfo, i)
+    if okInfo and type(info) == "table" and not info.isHeader and not info.isHidden
+        and type(info.questID) == "number" and info.questID > 0 then
+      local id = info.questID
+      local idx = info.questLogIndex or i
+      out[id] = { index = idx, quest_id = id, title = clean(info.title, 200), level = info.level,
+                  complete = questComplete(api, info, id), objectives = readObjectives(api, idx, id) }
+      order[#order + 1] = id
+    end
+  end
+  return out, order
+end
+
 local function readLog(api)
+  if api.C_QuestLog and api.C_QuestLog.GetNumQuestLogEntries and api.C_QuestLog.GetInfo then
+    local out, order = readLogModern(api)
+    if out then return out, order end
+  end
   local out, order = {}, {}
   if not api.GetNumQuestLogEntries or not api.GetQuestLogTitle then return out, order end
   local n = api.GetNumQuestLogEntries() or 0
@@ -115,18 +149,37 @@ local function readLog(api)
   end
   return out, order
 end
+Q.readLog = readLog
 
 -- The short objective summary and (only when allowed) the full quest text. Selecting a quest log
 -- entry is how the game exposes this; the player's own selection is put back straight away.
-local function readText(api, index, wantFull)
-  if not (api.SelectQuestLogEntry and api.GetQuestLogQuestText) then return {} end
+-- C_QuestLog.SetSelectedQuest on Forever, SelectQuestLogEntry on older clients.
+local function selectAndRead(api, index, questID)
+  local C = api.C_QuestLog
+  if C and C.SetSelectedQuest and questID then
+    local prev = C.GetSelectedQuest and C.GetSelectedQuest() or nil
+    local ok, desc, summary = pcall(function()
+      C.SetSelectedQuest(questID)
+      return api.GetQuestLogQuestText(index)
+    end)
+    if prev and prev ~= 0 and prev ~= questID then pcall(C.SetSelectedQuest, prev) end
+    return ok, desc, summary
+  end
   local prev = api.GetQuestLogSelection and api.GetQuestLogSelection() or nil
-  Q.busy = true
   local ok, desc, summary = pcall(function()
     api.SelectQuestLogEntry(index)
     return api.GetQuestLogQuestText()
   end)
   if prev then pcall(api.SelectQuestLogEntry, prev) end
+  return ok, desc, summary
+end
+
+local function readText(api, index, questID, wantFull)
+  if not api.GetQuestLogQuestText then return {} end
+  local modern = api.C_QuestLog and api.C_QuestLog.SetSelectedQuest
+  if not modern and not api.SelectQuestLogEntry then return {} end
+  Q.busy = true
+  local ok, desc, summary = selectAndRead(api, index, questID)
   Q.busy = false
   if not ok then return {} end
   local r = {}
@@ -159,7 +212,7 @@ function Q.onAccepted(ctx, a, b)
   local data = { quest_id = questID }
   if q then
     data.title, data.level, data.objectives = q.title, q.level, q.objectives
-    local t = readText(api, q.index, ctx.settings.record_quest_text == true)
+    local t = readText(api, q.index, questID, ctx.settings.record_quest_text == true)
     data.summary, data.description, data.text_cut = t.summary, t.description, t.text_cut
   elseif api.C_QuestLog and api.C_QuestLog.GetTitleForQuestID then
     data.title = clean(api.C_QuestLog.GetTitleForQuestID(questID), 200)
@@ -302,6 +355,37 @@ function Q.onBags(ctx)
   Q.awaitingBags = keep
 end
 
+-- GET_ITEM_INFO_RECEIVED / ITEM_DATA_LOAD_RESULT (itemID, success): the game has loaded an item a
+-- reward panel listed without a name. Its name (for that same item ID, from the game) is filled in on
+-- the waiting offer and on what was already recorded; nothing else changes.
+local function itemName(api, itemID)
+  local C = api.C_Item
+  local tries = { C and C.GetItemNameByID, C and C.GetItemInfo, api.GetItemInfo }
+  for _, f in ipairs(tries) do
+    if f then
+      local ok, name = pcall(f, itemID)
+      if ok and type(name) == "string" and name ~= "" then return name end
+    end
+  end
+end
+
+function Q.onItemInfo(ctx, itemID, success)
+  if type(itemID) ~= "number" or not Q.wanted[itemID] or success == false then return end
+  local name = itemName(ctx.api, itemID)
+  if not name then return end
+  name = clean(name, 200)
+  if not name then return end
+  Q.wanted[itemID] = nil
+  for _, p in pairs(Q.pending) do
+    for _, list in ipairs({ p.choices, p.guaranteed }) do
+      for _, it in ipairs(list or {}) do
+        if it.item_id == itemID and it.name_pending then it.name, it.name_pending = name, nil end
+      end
+    end
+  end
+  if ctx.fillItemName then ctx.fillItemName(itemID, name) end
+end
+
 -- QUEST_FINISHED: the panel closed. If no turn-in followed, the offer stays recorded as "seen" only.
 function Q.onFinished()
   Q.current = nil
@@ -314,6 +398,8 @@ Q.events = {
   QUEST_TURNED_IN = function(ctx, ...) Q.onTurnedIn(ctx, ...) end,
   QUEST_FINISHED = function(ctx) Q.onFinished(ctx) end,
   BAG_UPDATE_DELAYED = function(ctx) Q.onBags(ctx) end,
+  GET_ITEM_INFO_RECEIVED = function(ctx, ...) Q.onItemInfo(ctx, ...) end,
+  ITEM_DATA_LOAD_RESULT = function(ctx, ...) Q.onItemInfo(ctx, ...) end,
 }
 
 return Q

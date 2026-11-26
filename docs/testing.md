@@ -77,5 +77,8 @@ Setup: install as in [install.md](install.md). Turn on Lua errors with `/console
 | 48 | Drag the minimap button around the edge, then `/reload` | It follows the edge and stays where you left it |
 | 49 | `/ac set minimap off`, then `on` | The button disappears and comes back |
 | 50 | `/ac shot clean` with the minimap button showing | The button is not in the image (it hides with the minimap) |
+| 51 | On WoW Forever, accept a quest with a kill or collect objective, then export | `quest.accepted` has `objectives` (and `summary` if the game gives it). Note whether the summary is there |
+| 52 | With `/ac set loot on`, loot several corpses (with and without auto loot), then export | One `loot.seen` per corpse, not two |
+| 53 | Turn in a quest with a reward you've never seen before | The reward window line names the items, or the name appears within a few seconds in review and the export |
 
 Record the results in a copy of this table and add a summary to [test_results.md](test_results.md). Don't commit real exports or saved data.
