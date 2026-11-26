@@ -205,7 +205,7 @@ describe("addon load (stubbed)", function()
       slash("report")
       ns.ui.report.setWhat("The mini recorder didn't show")
       local report = ns.ui.report.text()
-      assert.truthy(report:find("Adventure Chronicler 0.3.7", 1, true))
+      assert.truthy(report:find("Adventure Chronicler 0.3.8", 1, true))
       assert.truthy(report:find("loot.lua:1: boom", 1, true))
       assert.truthy(report:find("What happened: The mini recorder didn't show", 1, true))
       assert.is_nil(report:find("Examplechar", 1, true)); assert.is_nil(report:find("Example Realm", 1, true))
@@ -215,7 +215,7 @@ describe("addon load (stubbed)", function()
       -- What's new opens on the newest version, and from Help.
       slash("whatsnew")
       assert.is_true(ns.ui.whatsnew.isShown())
-      assert.equal("0.3.7", ns.ui.whatsnew.current().version)
+      assert.equal("0.3.8", ns.ui.whatsnew.current().version)
 
       -- The review window's Filter only hides rows.
       slash("review")

@@ -4,6 +4,13 @@ local _, ns = ...
 ns = ns or {}
 
 ns.CHANGELOG = {
+  { version = "0.3.8", date = "2026-11-26", status = "prototype, unreleased",
+    title = "What's new is easier to read",
+    changes = {
+      { kind = "Improved", area = "Windows",
+        text = "What's new is easier to read on its parchment: the New, Improved and Fixed labels are darker and in capitals, area names are in dark ink, and commands are dark red instead of gold." },
+    },
+  },
   { version = "0.3.7", date = "2026-11-26", status = "prototype, unreleased",
     title = "Settings opens in front",
     changes = {

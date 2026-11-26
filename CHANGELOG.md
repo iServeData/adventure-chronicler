@@ -2,6 +2,10 @@
 
 Built from `changelog.toml` by `tools/build_changelog.py`; edit that file, not this one.
 
+## 0.3.8 · 2026-11-26 · What's new is easier to read (prototype, unreleased)
+
+- **Improved** (Windows): What's new is easier to read on its parchment: the New, Improved and Fixed labels are darker and in capitals, area names are in dark ink, and commands are dark red instead of gold.
+
 ## 0.3.7 · 2026-11-26 · Settings opens in front (prototype, unreleased)
 
 - **Fixed** (Windows): Settings no longer opens behind the review window. Any Adventure Chronicler window you open now comes to the front.

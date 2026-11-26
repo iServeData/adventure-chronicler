@@ -12,13 +12,16 @@ ns.ui.whatsnew = N
 local f, listChild, pageChild, pageScroll, pageText, pageHead, pageMeta, newer, older, showCheck
 local versionRows = {}
 
-local KIND_COLOUR = { New = "6fd36f", Improved = "d6ab5c", Fixed = "7fb4ff" }
+-- Dark colours, because the page is parchment: green, amber and blue labels, dark ink for the area, and
+-- commands in dark red (bright gold disappears on parchment).
+local KIND_COLOUR = { New = "1d5e20", Improved = "7a3e00", Fixed = "1c4587" }
+local AREA_COLOUR, CODE_COLOUR = "38240f", "8b1a1a"
 
 -- Changelog text for a WoW font string: "|" would start an escape code, so it's doubled, and `code`
--- is shown in gold instead of backticks.
+-- is shown in dark red instead of backticks.
 function N.format(text)
   local s = tostring(text or ""):gsub("|", "||")
-  s = s:gsub("`([^`]+)`", "|cffffd100%1|r")
+  s = s:gsub("`([^`]+)`", "|cff" .. CODE_COLOUR .. "%1|r")
   return s
 end
 
@@ -26,8 +29,8 @@ end
 function N.page(r)
   local parts = {}
   for _, c in ipairs(r.changes or {}) do
-    parts[#parts + 1] = string.format("|cff%s%s|r  |cff8a6a3a%s|r\n%s", KIND_COLOUR[c.kind] or "ffffff",
-      c.kind, c.area, N.format(c.text))
+    parts[#parts + 1] = string.format("|cff%s%s|r |cff%s· %s|r\n%s", KIND_COLOUR[c.kind] or AREA_COLOUR,
+      string.upper(tostring(c.kind or "")), AREA_COLOUR, tostring(c.area or ""), N.format(c.text))
   end
   return table.concat(parts, "\n\n")
 end

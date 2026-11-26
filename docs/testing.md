@@ -105,5 +105,6 @@ Setup: install as in [install.md](install.md). Turn on Lua errors with `/console
 | 76 | Open the Recorder, Settings, What's new and Report a problem | Each says Adventure Chronicler at the top with its own name under it in smaller gold text, nothing cut off (the Recorder is the narrowest). Review, Export and Note keep one line: "Adventure Chronicler: review" and so on |
 | 77 | Open `/ac review`, then click Settings in the Recorder; open What's new and Report a problem from Settings | Each window opens in front of the others; clicking a window brings it to the front (0.3.7) |
 | 78 | Open an event's details panel, then delete every session in the review window | The details panel closes; Rename and Filter are hidden while there are no sessions, and come back when you start one |
+| 79 | `/ac whatsnew`; page through a few versions, including one with a command such as `/ac link` | Labels read "NEW · Review" in dark green, amber or blue; area names and commands are easy to read on the parchment (0.3.8) |
 
 Record the results in a copy of this table and add a summary to [test_results.md](test_results.md). Don't commit real exports or saved data.
