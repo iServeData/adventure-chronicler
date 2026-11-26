@@ -69,16 +69,17 @@ Setup: install as in [install.md](install.md). Turn on Lua errors with `/console
 | 40 | Press Start with quests already in the log (including one under a collapsed header) | "Quest log at start: N quests already in progress (seen)". Note whether quests under collapsed headers were counted |
 | 41 | `/ac set questtext on`, accept a quest, export; then `/ac set questtext off` and export again | The first export has the quest giver's text in `description`; the second doesn't. Both validate |
 | 42 | With the quest log open and a quest selected, accept another quest | Your selection in the quest log doesn't change |
-| 43 | While recording, press the compass button at the start of the row under REC | The recorder window opens (same as `/ac`) |
-| 44 | Press the x at the top right of the indicator | It becomes a small tab (about 84 by 20) with the compass, a red dot and the time. While paused the dot is gold |
-| 45 | Drag the small tab, press its compass, then click the tab itself; `/reload` before and after | Compass opens the recorder. Clicking the tab brings the full window back. The small or full choice survives `/reload`. Note whether each keeps its position |
-| 46 | `/ac set indicator hide` while recording, then pause and resume, then `/reload` | Nothing on screen. Chat says "Adventure Chronicler is recording, /ac to open" on resume and after the reload. `/ac set indicator show` brings it back |
-| 47 | Look at the minimap with no session, then while recording and while paused | A compass button on the minimap edge: no dot, then a red dot, then a gold dot. The tooltip says how to open, drag and hide it. Note whether the round border lines up |
+| 43 | While recording, press the compass button at the start of the mini recorder's row | The Adventure Recorder opens and the mini recorder steps aside |
+| 44 | With no session, close the Adventure Recorder; start a session, then close the Adventure Recorder | With no session nothing but the minimap compass is left. While recording, the mini recorder appears (REC and the time; PAUSED and a gold dot while paused) |
+| 45 | While recording: press the mini recorder's x, then the minimap compass, then the compass again, then once more | x hides it (compass keeps its red dot). Compass brings the mini recorder back, then opens the Adventure Recorder (mini recorder hides), then closes it (mini recorder back) |
+| 46 | Close the mini recorder with x, then `/reload`; then `/ac set minimap off` and close it twice | After the reload the mini recorder shows again. With the minimap button off, chat says "Still recording, /ac to open." once. `/ac set indicator hide` says the setting is gone |
+| 47 | Look at the minimap with no session, then while recording and while paused | A compass button on the minimap edge: no dot, then a red dot, then a gold dot. The tooltip says what a click will do and how to drag and hide it. Note whether the round border lines up |
 | 48 | Drag the minimap button around the edge, then `/reload` | It follows the edge and stays where you left it |
 | 49 | `/ac set minimap off`, then `on` | The button disappears and comes back |
 | 50 | `/ac shot clean` with the minimap button showing | The button is not in the image (it hides with the minimap) |
 | 51 | On WoW Forever, accept a quest with a kill or collect objective, then export | `quest.accepted` has `objectives` (and `summary` if the game gives it). Note whether the summary is there |
 | 52 | With `/ac set loot on`, loot several corpses (with and without auto loot), then export | One `loot.seen` per corpse, not two |
 | 53 | Turn in a quest with a reward you've never seen before | The reward window line names the items, or the name appears within a few seconds in review and the export |
+| 54 | On WoW Forever, accept The Corrupter (or any quest whose objectives were missing in 0.3.2), then export | `quest.accepted` has its objectives, filled in within about 10 seconds; still one Accepted line in the log (0.3.3) |
 
 Record the results in a copy of this table and add a summary to [test_results.md](test_results.md). Don't commit real exports or saved data.

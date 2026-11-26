@@ -117,6 +117,56 @@ describe("quest log on Forever (C_QuestLog only)", function()
   end)
 end)
 
+describe("objectives that reach the quest log after QUEST_ACCEPTED (0.3.3)", function()
+  it("fills in empty fields from the next log updates, without adding entries", function()
+    local ns, db, c, api, ctx = setup()
+    local log = modernLog(api, { { id = 9211, title = "Fixture Crystal", summary = "Bring a fixture crystal." } })
+    ns.capture.quests.onAccepted(ctx, 9211) -- the log has the quest but no objectives yet
+    local o = obs(db)[1]
+    assert.same({}, o.data.objectives)
+    c.advance(1)
+    log[1].objectives = { { "Fixture Crystal: 0/1", false, 0, 1 } }
+    ns.capture.quests.onLogUpdate(ctx)
+    assert.equal(1, #obs(db)) -- filled in place, not a second entry, and not counted as progress
+    assert.equal("Fixture Crystal: 0/1", o.data.objectives[1].text)
+    assert.equal("Bring a fixture crystal.", o.data.summary)
+    assert.is_nil(ns.capture.quests.late[9211])
+  end)
+
+  it("fills in a quest the log didn't list yet, title from the log", function()
+    local ns, db, c, api, ctx = setup()
+    local entries = {}
+    local log = modernLog(api, entries)
+    api.C_QuestLog.GetTitleForQuestID = function() return nil end
+    ns.capture.quests.onAccepted(ctx, 9212)
+    local o = obs(db)[1]
+    assert.is_nil(o.data.title)
+    c.advance(2)
+    log[1] = { id = 9212, title = "Fixture Late", objectives = { { "Fixture Shard: 0/3", false, 0, 3 } } }
+    ns.capture.quests.onLogUpdate(ctx)
+    assert.equal("Fixture Late", o.data.title); assert.equal(3, o.data.objectives[1].required)
+  end)
+
+  it("stops looking after the retry window and never invents objectives", function()
+    local ns, db, c, api, ctx = setup()
+    local log = modernLog(api, { { id = 9213, title = "Fixture Talk" } })
+    ns.capture.quests.onAccepted(ctx, 9213)
+    c.advance(ns.capture.quests.ACCEPT_RETRY + 1)
+    ns.capture.quests.onLogUpdate(ctx)
+    assert.is_nil(ns.capture.quests.late[9213])
+    log[1].objectives = { { "Fixture Word: 0/1", false, 0, 1 } }
+    ns.capture.quests.onLogUpdate(ctx)
+    assert.same({}, obs(db)[1].data.objectives) -- too late: left as recorded
+  end)
+
+  it("doesn't retry when the objectives were there at once", function()
+    local ns, _, _, api, ctx = setup()
+    modernLog(api, { { id = 9214, title = "Fixture Ready", objectives = { { "Fixture Hide: 0/2", false, 0, 2 } } } })
+    ns.capture.quests.onAccepted(ctx, 9214)
+    assert.is_nil(ns.capture.quests.late[9214])
+  end)
+end)
+
 describe("reward names that load later", function()
   it("fills in the name on the offer and on the recorded observations, for that item only", function()
     local ns, db, _, api, ctx = setup()

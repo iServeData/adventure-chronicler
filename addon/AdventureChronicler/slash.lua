@@ -16,17 +16,18 @@ local HELP = {
   "/ac export  copy the latest session (import code, Markdown, text or JSON)",
   "/ac link <https://...>  set the QuestersBoard address (/ac link clear goes back to the default)",
   "/ac options  show settings;  /ac set <setting> on|off",
-  "/ac set indicator hide|show  hide the recording window (chat reminds you); /ac set minimap off|on",
+  "/ac set minimap off|on  hide or show the compass button on the minimap",
+  "/ac set buttons off|on  hide or show the small buttons on the mini recorder",
   "/ac version",
 }
 
 local SETTABLE = {
   prompt = "prompt_on_instance", pvp = "record_pvp", loot = "record_personal_loot",
   identity = "include_identity", classlevel = "include_class_level", buttons = "indicator_buttons",
-  questtext = "record_quest_text", indicator = "show_indicator", minimap = "minimap_button",
+  questtext = "record_quest_text", minimap = "minimap_button",
 }
 
--- on/off for every setting; show/hide too (they read better for the indicator and minimap button).
+-- on/off for every setting; show/hide too (they read better for the minimap button).
 local VALUES = { on = true, off = false, show = true, hide = false }
 
 local function options(App)
@@ -57,15 +58,16 @@ function ns.handleSlash(msg)
   elseif cmd == "set" then
     local name, val = rest:match("^(%S+)%s+(%S+)$")
     name, val = name and name:lower(), val and val:lower()
+    if name == "indicator" then
+      App.print("That setting is gone since 0.3.3. Close the mini recorder with its x; the compass on the "
+        .. "minimap brings it back.")
+      return
+    end
     local key = name and SETTABLE[name]
     if not key or VALUES[val] == nil then App.print("Usage: /ac set <" ..
-      "prompt|pvp|loot|identity|classlevel|buttons|questtext|indicator|minimap> on|off") return end
+      "prompt|pvp|loot|identity|classlevel|buttons|questtext|minimap> on|off") return end
     App.settings[key] = VALUES[val]
     App.print(name .. " is now " .. (VALUES[val] and "on" or "off") .. ".")
-    if key == "show_indicator" and not VALUES[val] then
-      App.print("The recording window stays hidden. While a session is open you'll get a reminder in chat. "
-        .. "/ac set indicator show brings it back.")
-    end
     App.refresh()
   elseif cmd == "version" then App.print("version " .. App.VERSION)
   elseif cmd == "help" then for _, line in ipairs(HELP) do App.print(line) end

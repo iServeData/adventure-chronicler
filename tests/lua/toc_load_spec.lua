@@ -82,30 +82,38 @@ describe("addon load (stubbed)", function()
       assert.is_false(_G.AdventureChroniclerDB.settings.indicator_buttons)
       slash("set buttons on")
       assert.is_true(_G.AdventureChroniclerDB.settings.indicator_buttons)
-      -- Minimize to the small tab and back (remembered in settings).
+      -- 0.3.3 window flow. The Adventure Recorder is open (slash("") above), so the mini recorder steps aside.
       local settings0 = _G.AdventureChroniclerDB.settings
-      local full, _, btns = ns.ui.indicator.frames()
-      assert.is_true(full:IsShown())
-      rawget(btns.minimize, "_OnClick")(btns.minimize)
-      local _, tab = ns.ui.indicator.frames()
-      assert.is_true(settings0.indicator_minimized)
-      assert.is_false(full:IsShown()); assert.is_true(tab:IsShown())
-      rawget(tab, "_OnClick")(tab)
-      assert.is_false(settings0.indicator_minimized)
-      assert.is_true(full:IsShown()); assert.is_false(tab:IsShown())
-      -- Hiding the indicator completely: nothing on screen, so chat reminds you on resume.
-      slash("set indicator hide")
-      assert.is_false(settings0.show_indicator)
-      assert.is_false(full:IsShown()); assert.is_false(tab:IsShown())
+      assert.is_nil(settings0.show_indicator); assert.is_nil(settings0.indicator_minimized) -- retired
+      local function mshown() local f = ns.ui.indicator.frames(); return f ~= nil and f:IsShown() == true end
+      assert.is_true(ns.ui.recorder.isShown()); assert.is_false(mshown())
+      -- Closing the Adventure Recorder while recording shows the mini recorder.
+      ns.ui.recorder.close(); ns.ui.indicator.closed = false; ns.App.refresh() -- (the stub has no OnHide)
+      assert.is_true(mshown())
+      local _, btns = ns.ui.indicator.frames()
+      -- Its x hides it; the compass brings it back; the compass again opens the Adventure Recorder.
+      rawget(btns.close, "_OnClick")(btns.close)
+      assert.is_false(mshown())
+      ns.App.compass(); assert.is_true(mshown()); assert.is_false(ns.ui.recorder.isShown())
+      ns.App.compass(); assert.is_true(ns.ui.recorder.isShown()); assert.is_false(mshown())
+      ns.App.compass(); assert.is_false(ns.ui.recorder.isShown()) -- closes it again
+      ns.ui.indicator.closed = false; ns.App.refresh(); assert.is_true(mshown())
+      -- With the minimap button off, closing it says once in chat how to get back.
+      slash("set minimap off")
       local before = #printed
-      slash("pause"); slash("resume")
-      local reminded = false
+      rawget(btns.close, "_OnClick")(btns.close); ns.ui.indicator.reopen()
+      rawget(btns.close, "_OnClick")(btns.close)
+      local told = 0
       for i = before + 1, #printed do
-        if printed[i]:find("Adventure Chronicler is recording, /ac to open", 1, true) then reminded = true end
+        if printed[i]:find("Still recording, /ac to open.", 1, true) then told = told + 1 end
       end
-      assert.is_true(reminded)
-      slash("set indicator show")
-      assert.is_true(settings0.show_indicator); assert.is_true(full:IsShown())
+      assert.equal(1, told)
+      slash("set minimap on"); ns.ui.indicator.reopen()
+      -- The old setting answers with what to do now.
+      before = #printed
+      slash("set indicator hide")
+      assert.truthy(printed[before + 1]:find("gone since 0.3.3", 1, true))
+      assert.is_nil(settings0.show_indicator)
       -- The minimap button: shown with a dot while recording, draggable, and can be turned off.
       local mb, dot = ns.ui.minimap.frame()
       assert.is_true(mb:IsShown()); assert.is_true(dot:IsShown())

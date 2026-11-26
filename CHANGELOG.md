@@ -2,6 +2,14 @@
 
 Built from `changelog.toml` by `tools/build_changelog.py`; edit that file, not this one.
 
+## 0.3.3 · 2026-11-26 · Mini recorder and compass (prototype, unreleased)
+
+- **Improved** (Windows): Closing the Adventure Recorder while recording now leaves the mini recorder (REC or PAUSED, the time and the small buttons) on screen. With no session open, closing it leaves only the compass on the minimap.
+- **Improved** (Windows): The compass on the minimap opens the Adventure Recorder, or while a session is open, the mini recorder; from the mini recorder it opens the Adventure Recorder. Its red or gold dot still shows when recording or paused.
+- **Improved** (Windows): The mini recorder's x hides it; the compass brings it back, and it shows again after a login or /reload while a session is open. If the minimap button is off, chat says once that it's still recording.
+- **Improved** (Settings): The small tab and /ac set indicator hide are gone, since closing the mini recorder does the same. The chat reminders that went with them are gone too.
+- **Fixed** (Recorder): On WoW Forever, a quest whose objectives weren't in the quest log yet when you accepted it gets them filled in from the next quest log updates (for up to 10 seconds). Nothing is added that the log doesn't show.
+
 ## 0.3.2 · 2026-11-25 · Forever quest log, loot and reward name fixes (prototype, unreleased)
 
 - **Fixed** (Recorder): On WoW Forever, accepted quests now record their objectives and progress, and Start lists the quests already in your log. The add-on now reads the quest log the way Forever provides it.

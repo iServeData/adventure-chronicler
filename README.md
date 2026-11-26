@@ -6,17 +6,19 @@ your battleground results, along with notes and bookmarks you write. When you're
 out as a checked text export and turn it into a story. The story can be a private QuestersBoard Chronicle draft
 or a Markdown, text or HTML file.
 
-> Status: prototype, version 0.3.2. It has had **seven partial in-game test runs** (Windows; see [docs/test_results.md](docs/test_results.md)). The automated tests run
+> Status: prototype, version 0.3.3. It has had **seven partial in-game test runs** (Windows; see [docs/test_results.md](docs/test_results.md)). The automated tests run
 > against a mocked game API (see [docs/testing.md](docs/testing.md)).
 
 ## What it does and doesn't do
 
-- It only records while you've started a session. A visible REC / PAUSED indicator shows whenever it's
-  recording or paused. Its x button shrinks it to a small tab with a red (recording) or gold (paused) dot.
-  If you hide it completely (`/ac set indicator hide`), chat reminds you when recording starts, resumes or
-  continues after login, and the minimap button shows the dot.
-- A compass button on the minimap (and the first button under REC) opens the recorder, so you don't have
-  to type `/ac`. Drag it around the minimap; `/ac set minimap off` hides it.
+- It only records while you've started a session. While it's recording or paused, the compass button on
+  the minimap shows a red (recording) or gold (paused) dot, and the mini recorder (REC / PAUSED, the time
+  and small buttons) shows whenever the Adventure Recorder window is closed. The mini recorder's x hides it.
+  It comes back from the compass and after a login or `/reload`. If the minimap button is off, closing the
+  mini recorder says once in chat that it's still recording.
+- The compass button on the minimap opens the Adventure Recorder, or while a session is open, the mini
+  recorder (its first button opens the Adventure Recorder). Drag it around the minimap;
+  `/ac set minimap off` hides it, and `/ac` always works.
 - It records your own activity: zones, instance entry and exit, boss encounter results, quests you accept
   with their objectives and progress, quest turn-ins and reward choices, battleground results, your own deaths, and bookmarks.
 - Off by default: personal loot, your character name and realm in exports, and the "start recording?" prompt
@@ -43,7 +45,7 @@ or a Markdown, text or HTML file.
 | `/ac review` | Review, edit or delete sessions, notes and events |
 | `/ac export` | Show the latest session to copy: the import code for QuestersBoard, or Markdown, Text or JSON to keep as a file |
 | `/ac link <https://...>` | Set the address the export window's Open QuestersBoard button shows. It starts as the placeholder `https://example.com/import`; `/ac link clear` goes back to it |
-| `/ac options`, `/ac set <setting> on\|off` | Show or change settings (`prompt`, `pvp`, `loot`, `identity`, `classlevel`, `buttons`, `questtext`). `questtext` (off by default) also keeps the quest giver's full text. `buttons` shows or hides the small Open, Note, Bookmark, Pause, Stop, Export and Review buttons under the REC indicator. `indicator hide\|show` hides the REC indicator completely (you get a chat reminder instead). `minimap off\|on` hides or shows the minimap button |
+| `/ac options`, `/ac set <setting> on\|off` | Show or change settings (`prompt`, `pvp`, `loot`, `identity`, `classlevel`, `buttons`, `questtext`). `questtext` (off by default) also keeps the quest giver's full text. `buttons` shows or hides the small Open, Note, Bookmark, Pause, Stop, Export and Review buttons on the mini recorder. `minimap off\|on` hides or shows the minimap button |
 
 If another addon already uses `/ac`, use `/advchron` instead.
 

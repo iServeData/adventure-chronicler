@@ -20,12 +20,15 @@ ns = ns or {}
 ns.capture = ns.capture or {}
 local util = ns.util
 
-local Q = { pending = {}, current = nil, awaitingBags = {}, baseline = nil, busy = false, wanted = {} }
+local Q = { pending = {}, current = nil, awaitingBags = {}, baseline = nil, busy = false, wanted = {}, late = {} }
 ns.capture.quests = Q
 
 Q.RECEIPT_WINDOW = 10 -- seconds after turn-in to look for bag changes
+Q.ACCEPT_RETRY = 10   -- seconds after accepting to keep looking for objectives the log hadn't filled in yet
 
-function Q.reset() Q.pending, Q.current, Q.awaitingBags, Q.baseline, Q.busy, Q.wanted = {}, nil, {}, nil, false, {} end
+function Q.reset()
+  Q.pending, Q.current, Q.awaitingBags, Q.baseline, Q.busy, Q.wanted, Q.late = {}, nil, {}, nil, false, {}, {}
+end
 
 local function itemCount(api, itemID)
   local f = (api.C_Item and api.C_Item.GetItemCount) or api.GetItemCount
@@ -217,16 +220,48 @@ function Q.onAccepted(ctx, a, b)
   elseif api.C_QuestLog and api.C_QuestLog.GetTitleForQuestID then
     data.title = clean(api.C_QuestLog.GetTitleForQuestID(questID), 200)
   end
-  ctx.record({ type = "quest.accepted", certainty = "confirmed", key = "accept:" .. questID, data = data })
+  local _, rec = ctx.record({ type = "quest.accepted", certainty = "confirmed", key = "accept:" .. questID,
+                             data = data })
   Q.baseline = Q.baseline or {}
   if q then Q.baseline[questID] = baselineFrom({ [questID] = q })[questID] end
+  -- On Forever the log often hasn't filled in a new quest's objectives when QUEST_ACCEPTED fires (a real
+  -- 0.3.2 log showed an accepted quest with none). Look again on the next log updates, for a short while.
+  if type(rec) == "table" and (not q or #(q.objectives or {}) == 0) then
+    Q.late[questID] = { rec = rec, until_t = (ctx.now and ctx.now() or 0) + Q.ACCEPT_RETRY }
+  end
 end
+
+-- Fills in what the quest log shows now for a quest accepted moments ago (within Q.ACCEPT_RETRY): only
+-- empty fields change, from the log itself. Nothing is guessed; a quest that never shows objectives
+-- keeps none. The export format is unchanged (no new fields).
+local function fillLate(ctx, log)
+  local now = ctx.now and ctx.now() or 0
+  for id, w in pairs(Q.late) do
+    local q = log[id]
+    local d = w.rec.data
+    if q and type(d) == "table" then
+      if not d.title and q.title then d.title = q.title end
+      if not d.level and q.level then d.level = q.level end
+      if #(d.objectives or {}) == 0 and #(q.objectives or {}) > 0 then d.objectives = q.objectives end
+      if not d.summary then
+        local t = readText(ctx.api, q.index, id, ctx.settings.record_quest_text == true)
+        if t.summary then d.summary = t.summary end
+        if t.description and not d.description then d.description = t.description end
+        if t.text_cut then d.text_cut = true end
+      end
+      if #(d.objectives or {}) > 0 then Q.late[id] = nil end
+    end
+    if Q.late[id] and now > w.until_t then Q.late[id] = nil end
+  end
+end
+Q.fillLate = fillLate
 
 -- QUEST_LOG_UPDATE: compare objective counts with the last reading. The first reading only sets
 -- the baseline; an objective seen for the first time is not counted as progress.
 function Q.onLogUpdate(ctx)
   if Q.busy then return end
   local log = readLog(ctx.api)
+  if next(Q.late) then fillLate(ctx, log) end
   local old = Q.baseline
   Q.baseline = baselineFrom(log)
   if not old then return end

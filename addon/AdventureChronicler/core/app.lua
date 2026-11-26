@@ -7,7 +7,7 @@ local L = ns.limits
 local App = { loaded = false, warnedFull = false }
 ns.App = App
 
-App.VERSION = "0.3.2"
+App.VERSION = "0.3.3"
 App.DEFAULT_SETTINGS = {
   prompt_on_instance = false,   -- ask (never auto-start) when entering a dungeon or raid
   record_pvp = true,            -- battleground entry/exit/result and own deaths
@@ -15,14 +15,14 @@ App.DEFAULT_SETTINGS = {
   record_quest_text = false,    -- opt-in: the quest giver's full text (objectives are always kept)
   include_identity = false,     -- opt-in: character name and realm in exports
   include_class_level = true,   -- class and level in exports (not identifying on their own)
-  show_indicator = true,        -- the recording indicator is shown while recording or paused (/ac set indicator hide
-                                -- hides it; you then get a chat reminder and the minimap button's dot instead)
-  indicator_buttons = true,     -- small Open, Note, Bookmark, Pause, Stop, Export, Review buttons on the indicator
-  indicator_minimized = false,  -- the indicator is shrunk to a small tab (its x button; click the tab to expand)
-  minimap_button = true,        -- the compass button on the minimap that opens the recorder
+  indicator_buttons = true,     -- small Open, Note, Bookmark, Pause, Stop, Export, Review buttons on the mini recorder
+  minimap_button = true,        -- the compass button on the minimap (Adventure Recorder, or the mini recorder
+                                -- while a session is open)
   minimap_angle = 200,          -- where that button sits around the minimap, in degrees (drag it to change)
   questersboard_url = "",       -- your own QuestersBoard address, set with /ac link ("" = App.DEFAULT_LINK)
 }
+
+App.RETIRED_SETTINGS = { "show_indicator", "indicator_minimized" }
 
 -- Where the export window's Open QuestersBoard button points until you set your own with /ac link.
 -- A placeholder: no real community address is shipped in the add-on.
@@ -91,6 +91,8 @@ function App.load()
   acct.schema = acct.schema or 1
   acct.settings = type(acct.settings) == "table" and acct.settings or {}
   for k, v in pairs(App.DEFAULT_SETTINGS) do if acct.settings[k] == nil then acct.settings[k] = v end end
+  -- Retired in 0.3.3: the small tab and /ac set indicator hide (closing the mini recorder does that now).
+  for _, k in ipairs(App.RETIRED_SETTINGS) do acct.settings[k] = nil end
   App.settings = acct.settings
   api.AdventureChroniclerCharDB = S.migrateStore(api.AdventureChroniclerCharDB)
   App.db = api.AdventureChroniclerCharDB
@@ -109,24 +111,10 @@ function App.recover()
     end
   end
   App.refresh()
-  App.remindHidden()
 end
 
 function App.onLogout()
   if App.db then App.db.last_seen = App.now() end
-end
-
--- When the indicator is hidden nothing on screen says a session is open, so say it in chat
--- (on start, on resume and at login while a session is open).
-function App.remindHidden()
-  if App.settings.show_indicator ~= false then return end
-  local s = S.active(App.db)
-  if not s then return end
-  if s.state == "recording" then
-    App.print("Adventure Chronicler is recording, /ac to open")
-  else
-    App.print("Adventure Chronicler has a paused session, /ac to open")
-  end
 end
 
 function App.refresh()
@@ -194,8 +182,8 @@ function App.start(title)
   if ns.capture.zones then ns.capture.zones.reset(); ns.capture.zones.check(App.ctx) end
   if ns.capture.quests then pcall(ns.capture.quests.snapshot, App.ctx) end
   App.print("Recording started. /ac pause, /ac note, /ac mark, /ac stop.")
+  if ns.ui and ns.ui.indicator then ns.ui.indicator.closed = false end
   App.refresh()
-  App.remindHidden()
 end
 
 function App.removeOldestThenStart(id, title)
@@ -213,7 +201,6 @@ function App.resume()
   local s, why = S.resume(App.db, App.now())
   App.print(s and "Recording resumed." or messages[why])
   App.refresh()
-  if s then App.remindHidden() end
 end
 
 function App.stop()
@@ -223,6 +210,7 @@ function App.stop()
   else
     App.print(messages[why])
   end
+  if ns.ui and ns.ui.indicator then ns.ui.indicator.closed = false end
   App.refresh()
 end
 
@@ -307,6 +295,43 @@ function App.recorder()
   if ns.ui and ns.ui.recorder then ns.ui.recorder.toggle() end
 end
 
-_G.AdventureChronicler_OnCompartmentClick = function() App.recorder() end -- luacheck: ignore
+-- What clicking the compass does, from what is on screen:
+--   no session                       -> open or close the Adventure Recorder
+--   session, Adventure Recorder open -> close it (the mini recorder takes over)
+--   session, mini recorder showing   -> open the Adventure Recorder
+--   session, mini recorder closed    -> show the mini recorder
+function App.compassAction(active, recorderShown, miniShown)
+  if not active then return recorderShown and "close_recorder" or "open_recorder" end
+  if recorderShown then return "close_recorder" end
+  if miniShown then return "open_recorder" end
+  return "show_mini"
+end
+
+App.COMPASS_TIPS = {
+  open_recorder = "Click to open the Adventure Recorder.",
+  close_recorder = "Click to close the Adventure Recorder.",
+  show_mini = "Click to show the mini recorder.",
+}
+
+local function compassState()
+  local R, I = ns.ui and ns.ui.recorder, ns.ui and ns.ui.indicator
+  local active = S.active(App.db) ~= nil
+  local recorderShown = R and R.isShown and R.isShown() or false
+  local miniShown = active and I and I.visible and I.visible(true, recorderShown, I.closed) or false
+  return App.compassAction(active, recorderShown, miniShown)
+end
+
+function App.compassTip() return App.COMPASS_TIPS[compassState()] end
+
+function App.compass()
+  local action = compassState()
+  local R, I = ns.ui.recorder, ns.ui.indicator
+  if action == "open_recorder" then R.open()
+  elseif action == "close_recorder" then R.close()
+  else I.reopen() end
+  App.refresh()
+end
+
+_G.AdventureChronicler_OnCompartmentClick = function() App.compass() end -- luacheck: ignore
 
 return App

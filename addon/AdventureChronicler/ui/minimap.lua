@@ -1,6 +1,7 @@
--- Adventure Chronicler: a minimap button that opens the recorder, so /ac isn't needed. Drag it around
--- the minimap's edge; /ac set minimap off hides it. While a session is recording it shows a red dot
--- (gold while paused). The border and background are the game's own minimap button art.
+-- Adventure Chronicler: the compass button on the minimap, shown whenever the addon is loaded (/ac set
+-- minimap off hides it). Clicking it opens the Adventure Recorder, or while a session is open shows the
+-- mini recorder (App.compass). Drag it around the minimap's edge. While a session is recording it shows
+-- a red dot (gold while paused). The border and background are the game's own minimap button art.
 local _, ns = ...
 ns = ns or {}
 ns.ui = ns.ui or {}
@@ -63,7 +64,7 @@ local function build()
   dot:SetSize(9, 9)
   dot:SetTexture(W.media("dot"))
   dot:SetPoint("TOPRIGHT", -3, -3)
-  btn:SetScript("OnClick", function() ns.App.recorder() end)
+  btn:SetScript("OnClick", function() ns.App.compass() end)
   btn:SetScript("OnDragStart", function(self) self:SetScript("OnUpdate", follow) end)
   btn:SetScript("OnDragStop", function(self) self:SetScript("OnUpdate", nil) end)
   btn:SetScript("OnEnter", function(self)
@@ -71,7 +72,8 @@ local function build()
     GameTooltip:AddLine("Adventure Chronicler")
     local _, status = ns.describe.status(ns.Session.active(ns.App.db))
     GameTooltip:AddLine(status, 1, 1, 1)
-    GameTooltip:AddLine("Click to open. Drag to move around the minimap.", 0.8, 0.8, 0.8)
+    GameTooltip:AddLine(ns.App.compassTip(), 0.8, 0.8, 0.8)
+    GameTooltip:AddLine("Drag to move around the minimap.", 0.8, 0.8, 0.8)
     GameTooltip:AddLine("/ac set minimap off hides this button.", 0.8, 0.8, 0.8)
     GameTooltip:Show()
   end)

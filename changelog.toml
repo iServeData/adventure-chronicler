@@ -8,6 +8,37 @@
 #                       text = one or two sentences
 
 [[release]]
+version = "0.3.3"
+date = "2026-11-26"
+title = "Mini recorder and compass"
+status = "prototype"
+
+[[release.change]]
+area = "Windows"
+kind = "improved"
+text = "Closing the Adventure Recorder while recording now leaves the mini recorder (REC or PAUSED, the time and the small buttons) on screen. With no session open, closing it leaves only the compass on the minimap."
+
+[[release.change]]
+area = "Windows"
+kind = "improved"
+text = "The compass on the minimap opens the Adventure Recorder, or while a session is open, the mini recorder; from the mini recorder it opens the Adventure Recorder. Its red or gold dot still shows when recording or paused."
+
+[[release.change]]
+area = "Windows"
+kind = "improved"
+text = "The mini recorder's x hides it; the compass brings it back, and it shows again after a login or /reload while a session is open. If the minimap button is off, chat says once that it's still recording."
+
+[[release.change]]
+area = "Settings"
+kind = "improved"
+text = "The small tab and /ac set indicator hide are gone, since closing the mini recorder does the same. The chat reminders that went with them are gone too."
+
+[[release.change]]
+area = "Recorder"
+kind = "fixed"
+text = "On WoW Forever, a quest whose objectives weren't in the quest log yet when you accepted it gets them filled in from the next quest log updates (for up to 10 seconds). Nothing is added that the log doesn't show."
+
+[[release]]
 version = "0.3.2"
 date = "2026-11-25"
 title = "Forever quest log, loot and reward name fixes"

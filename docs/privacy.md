@@ -6,10 +6,11 @@ paste it somewhere yourself.
 
 ## When it records
 
-Only between `/ac start` and `/ac stop`, and only while not paused. A REC / PAUSED indicator is shown the
-whole time, either full size or as a small tab with a red or gold dot. You can choose to hide it completely
-with `/ac set indicator hide` (off by default); then chat says "Adventure Chronicler is recording" when a
-session starts, resumes or continues after login, and the minimap button shows the dot. If the game closes or crashes, the next login records a gap and doesn't pretend you were
+Only between `/ac start` and `/ac stop`, and only while not paused. The compass button on the minimap shows a
+red (recording) or gold (paused) dot the whole time, and the mini recorder (REC / PAUSED and the time) shows
+whenever the Adventure Recorder window is closed. You can close the mini recorder with its x; it comes back
+after a login or `/reload`. If you've also turned the minimap button off, chat says once that it's still
+recording. If the game closes or crashes, the next login records a gap and doesn't pretend you were
 recording. After a long gap the session is paused until you resume it.
 
 ## What it records
